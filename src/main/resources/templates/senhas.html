@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="10">
+    <title>Visualizar Senhas - Sistema de Atendimento</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">📋 Visualização de Senhas</div>
+            <div class="nav-links">
+                <a href="/">Início</a>
+                <a href="/criar-secao">Criar Senha</a>
+                <a href="/login">Login Colaborador</a>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="alert alert-info">
+            <strong>🔄 Atualização Automática:</strong> Esta página é atualizada automaticamente a cada 10 segundos.
+        </div>
+
+        <!-- Filtros -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">🔍 Filtrar Senhas</h2>
+            </div>
+
+            <div class="btn-group">
+                <a href="/senhas" class="btn btn-primary">Todas</a>
+                <a href="/senhas?ativo=true" class="btn btn-success">Apenas Ativas</a>
+                <a href="/senhas?tipo=NORMAL" class="btn" style="background: #fbbf24;">Normal</a>
+                <a href="/senhas?tipo=PRIORITARIA" class="btn" style="background: #ef4444;">Prioritária</a>
+            </div>
+        </div>
+
+        <!-- Lista de Senhas -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">🎫 Senhas Geradas</h2>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Senha</th>
+                            <th>Cliente</th>
+                            <th>Tipo</th>
+                            <th>Status</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="secao : ${secoes}">
+                            <td th:text="${secao.id}"></td>
+                            <td><span class="senha-codigo" style="font-size: 1.2rem; letter-spacing: 3px;" th:text="${secao.senha}"></span></td>
+                            <td th:text="${secao.idCliente}"></td>
+                            <td>
+                                <span class="badge" th:classappend="${secao.tipoSecao == 'PRIORITARIA'} ? badge-danger : badge-info" 
+                                      th:text="${secao.tipoSecao}"></span>
+                            </td>
+                            <td>
+                                <span class="badge" th:classappend="${secao.ativo} ? badge-success : badge-danger">
+                                    <span th:text="${secao.ativo ? 'ATIVA' : 'INATIVA'}"></span>
+                                </span>
+                            </td>
+                            <td>
+                                <a th:if="${secao.ativo}" 
+                                   th:href="@{/senhas/atender/{id}(id=${secao.id})}" 
+                                   class="btn btn-success" 
+                                   style="padding: 6px 12px;">Atender</a>
+                                <span th:unless="${secao.ativo}" style="color: var(--text-secondary);">Finalizada</span>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(secoes)}">
+                            <td colspan="6" style="text-align: center; color: var(--text-secondary);">Nenhuma senha encontrada</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Estatísticas -->
+        <div class="grid grid-3">
+            <div class="card" style="text-align: center;">
+                <div style="font-size: 2.5rem; font-weight: bold; color: var(--success-color);" th:text="${totalSenhas}">0</div>
+                <div style="color: var(--text-secondary);">Total de Senhas</div>
+            </div>
+            <div class="card" style="text-align: center;">
+                <div style="font-size: 2.5rem; font-weight: bold; color: var(--primary-color);" th:text="${senhasAtivas}">0</div>
+                <div style="color: var(--text-secondary);">Senhas Ativas</div>
+            </div>
+            <div class="card" style="text-align: center;">
+                <div style="font-size: 2.5rem; font-weight: bold; color: var(--danger-color);" th:text="${senhasPrioritarias}">0</div>
+                <div style="color: var(--text-secondary);">Prioritárias</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

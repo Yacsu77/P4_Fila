@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="15">
+    <title>Atendimento - Colaborador</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">👨‍💼 Painel de Atendimento</div>
+            <div class="nav-links">
+                <a href="/login">Trocar Usuário</a>
+                <a href="/senhas">Ver Senhas</a>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="alert alert-info">
+            <strong>🔄 Atualização Automática:</strong> Esta página é atualizada automaticamente a cada 15 segundos.
+        </div>
+
+        <!-- Informações do Colaborador -->
+        <div class="card">
+            <div class="card-header">
+                <h1 class="card-title">🔐 Usuário Logado</h1>
+            </div>
+            <div style="padding: 20px;">
+                <p><strong>Colaborador:</strong> <span th:text="${colaboradorLogado?.nome}"></span></p>
+                <p><strong>CPF:</strong> <span th:text="${colaboradorLogado?.cpf}"></span></p>
+                <p><strong>Departamento ID:</strong> <span th:text="${colaboradorLogado?.departamentoId}"></span></p>
+            </div>
+        </div>
+
+        <!-- FASE 1: Senha em Atendimento (se houver) -->
+        <div th:if="${senhaEmAtendimento}" class="card" style="border: 3px solid var(--success-color);">
+            <div class="card-header">
+                <h2 class="card-title">👨‍💼 Atendimento em Andamento</h2>
+                <span class="badge badge-success" style="font-size: 1rem;">EM ATENDIMENTO</span>
+            </div>
+            
+            <div class="senha-display">
+                <div class="senha-codigo" th:text="${senhaEmAtendimento.senha}"></div>
+                <div class="senha-info">
+                    Tipo: <span th:text="${senhaEmAtendimento.tipoSecao}"></span>
+                </div>
+            </div>
+
+            <div class="grid grid-2" style="margin-top: 20px;">
+                <!-- Finalizar Atendimento -->
+                <form th:action="@{/atendimento/finalizar}" method="post">
+                    <input type="hidden" th:name="idSecao" th:value="${senhaEmAtendimento.id}">
+                    <div class="form-group">
+                        <label for="descricao">Descrição do Atendimento</label>
+                        <textarea id="descricao" name="descricao" placeholder="Descreva o atendimento realizado..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-success" style="width: 100%;">✅ Finalizar Atendimento</button>
+                </form>
+
+                <!-- Transferir Atendimento -->
+                <form th:action="@{/atendimento/transferir}" method="post">
+                    <input type="hidden" th:name="idSecao" th:value="${senhaEmAtendimento.id}">
+                    <div class="form-group">
+                        <label for="departamentoDestinoId">Transferir para Departamento ID</label>
+                        <input type="number" id="departamentoDestinoId" name="departamentoDestinoId" placeholder="Ex: 2" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="descricao_transf">Motivo da Transferência</label>
+                        <textarea id="descricao_transf" name="descricao" placeholder="Por que está transferindo?" required></textarea>
+                    </div>
+                    <button type="submit" class="btn" style="width: 100%; background: var(--warning-color); color: white;">🔄 Transferir Atendimento</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- FASE 2: Lista de Senhas Aguardando -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">📋 Senhas Aguardando Atendimento</h2>
+                <span class="badge badge-info" th:text="${#lists.size(senhasAguardando) + ' em espera'}"></span>
+            </div>
+
+            <div th:if="${#lists.isEmpty(senhasAguardando)}" class="alert alert-info">
+                <strong>ℹ️ Nenhuma senha aguardando no momento.</strong>
+            </div>
+
+            <div th:if="${!#lists.isEmpty(senhasAguardando)}" class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Senha</th>
+                            <th>Tipo</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="senha : ${senhasAguardando}">
+                            <td><span class="senha-codigo" style="font-size: 1.5rem; letter-spacing: 5px;" th:text="${senha.senha}"></span></td>
+                            <td>
+                                <span class="badge" th:classappend="${senha.tipoSecao == 'PRIORITARIA'} ? badge-danger : badge-info" 
+                                      th:text="${senha.tipoSecao}"></span>
+                            </td>
+                            <td>
+                                <span class="badge badge-warning" th:text="${senha.status}"></span>
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 5px;">
+                                    <form th:action="@{/atendimento/chamar}" method="post" style="display: inline;">
+                                        <input type="hidden" th:name="idSecao" th:value="${senha.id}">
+                                        <button type="submit" class="btn" style="background: var(--primary-color); color: white; padding: 6px 12px;">📢 Chamar</button>
+                                    </form>
+                                    <form th:action="@{/atendimento/iniciar}" method="post" style="display: inline;">
+                                        <input type="hidden" th:name="idSecao" th:value="${senha.id}">
+                                        <button type="submit" class="btn btn-success" style="padding: 6px 12px;">✅ Confirmar Cliente</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Histórico de Atendimentos -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">📊 Meus Atendimentos Recentes</h2>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Senha</th>
+                            <th>Descrição</th>
+                            <th>Data/Hora</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="atendimento : ${meusAtendimentos}">
+                            <td th:text="${atendimento.id}"></td>
+                            <td th:text="${atendimento.idSecao}"></td>
+                            <td th:text="${atendimento.descricaoAtendimento}"></td>
+                            <td>-</td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(meusAtendimentos)}">
+                            <td colspan="4" style="text-align: center; color: var(--text-secondary);">Nenhum atendimento realizado ainda</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

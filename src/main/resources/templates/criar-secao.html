@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Senha - Sistema de Atendimento</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">🎫 Criar Nova Senha</div>
+            <div class="nav-links">
+                <a href="/">Início</a>
+                <a href="/clientes">Clientes</a>
+                <a href="/senhas">Visualizar Senhas</a>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h1 class="card-title">Gerar Senha de Atendimento</h1>
+            </div>
+
+            <form th:action="@{/criar-secao}" method="post">
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label for="idCliente">Selecione o Cliente</label>
+                        <select id="idCliente" th:name="idCliente" required>
+                            <option value="">-- Selecione um cliente --</option>
+                            <option th:each="cliente : ${clientes}" th:value="${cliente.id}" th:text="${cliente.nome + ' (' + cliente.cpf + ')'}"></option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tipoSecao">Tipo de Atendimento</label>
+                        <select id="tipoSecao" th:name="tipoSecao" required>
+                            <option value="">-- Selecione o tipo --</option>
+                            <option value="NORMAL">Normal</option>
+                            <option value="PRIORITARIA">Prioritária</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="alert alert-info" style="margin-top: 20px;">
+                    <strong>ℹ️ Informação:</strong> A senha será gerada automaticamente pelo sistema.<br>
+                    <strong>Normal:</strong> Prefixo NA### (ex: NA001, NA002)<br>
+                    <strong>Prioritária:</strong> Prefixo PX### (ex: PX001, PX002)
+                </div>
+
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary">🎫 Gerar Senha</button>
+                    <a href="/senhas" class="btn btn-secondary">Ver Todas as Senhas</a>
+                </div>
+            </form>
+
+            <div th:if="${senhaGerada}" class="senha-display" style="margin-top: 30px;">
+                <div style="font-size: 1.5rem; margin-bottom: 10px;">✅ Senha Gerada com Sucesso!</div>
+                <div class="senha-codigo" th:text="${senhaGerada}"></div>
+                <div class="senha-info">
+                    Tipo: <span th:text="${tipoSecao}"></span>
+                </div>
+                <div style="margin-top: 20px;">
+                    <a href="/criar-secao" class="btn" style="background: white; color: #667eea;">Gerar Outra Senha</a>
+                </div>
+            </div>
+
+            <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+        </div>
+    </div>
+
+    <script>
+        // Redirecionar para /senhas após 5 segundos se a senha foi gerada
+        if (document.querySelector('.senha-display')) {
+            setTimeout(function() {
+                if (confirm('Deseja visualizar todas as senhas?')) {
+                    window.location.href = '/senhas';
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
+

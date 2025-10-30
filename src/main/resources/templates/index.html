@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Atendimento - P4 Fila</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">🎯 Sistema P4 Fila</div>
+            <div class="nav-links">
+                <a href="/">Início</a>
+                <a href="/clientes">Clientes</a>
+                <a href="/criar-secao">Criar Senha</a>
+                <a href="/senhas">Visualizar Senhas</a>
+                <a href="/login">Login Colaborador</a>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h1 class="card-title">Bem-vindo ao Sistema de Atendimento</h1>
+            </div>
+            
+            <p style="font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 30px;">
+                Gerencie filas de atendimento, clientes e colaboradores de forma eficiente.
+            </p>
+
+            <div class="grid grid-2">
+                <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h2 style="margin-bottom: 15px;">👤 Clientes</h2>
+                    <p style="margin-bottom: 20px;">Cadastre, altere e exclua clientes do sistema</p>
+                    <a href="/clientes" class="btn" style="background: white; color: #667eea;">Gerenciar Clientes</a>
+                </div>
+
+                <div class="card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                    <h2 style="margin-bottom: 15px;">🎫 Criar Senha</h2>
+                    <p style="margin-bottom: 20px;">Gere senhas de atendimento (Normal ou Prioritária)</p>
+                    <a href="/criar-secao" class="btn" style="background: white; color: #f5576c;">Criar Senha</a>
+                </div>
+
+                <div class="card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
+                    <h2 style="margin-bottom: 15px;">📋 Visualizar Senhas</h2>
+                    <p style="margin-bottom: 20px;">Acompanhe todas as senhas em tempo real</p>
+                    <a href="/senhas" class="btn" style="background: white; color: #00f2fe;">Ver Senhas</a>
+                </div>
+
+                <div class="card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white;">
+                    <h2 style="margin-bottom: 15px;">👨‍💼 Login Colaborador</h2>
+                    <p style="margin-bottom: 20px;">Acesse para iniciar atendimentos</p>
+                    <a href="/login" class="btn" style="background: white; color: #fee140;">Fazer Login</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 style="margin-bottom: 20px;">📊 Estatísticas Rápidas</h2>
+            <div class="grid grid-3">
+                <div style="text-align: center; padding: 20px; background: #f9fafb; border-radius: 8px;">
+                    <div style="font-size: 2.5rem; font-weight: bold; color: var(--primary-color);" th:text="${totalClientes}">0</div>
+                    <div style="color: var(--text-secondary);">Clientes Cadastrados</div>
+                </div>
+                <div style="text-align: center; padding: 20px; background: #f9fafb; border-radius: 8px;">
+                    <div style="font-size: 2.5rem; font-weight: bold; color: var(--success-color);" th:text="${senhasAtivas}">0</div>
+                    <div style="color: var(--text-secondary);">Senhas Ativas</div>
+                </div>
+                <div style="text-align: center; padding: 20px; background: #f9fafb; border-radius: 8px;">
+                    <div style="font-size: 2.5rem; font-weight: bold; color: var(--warning-color);" th:text="${senhasEspera}">0</div>
+                    <div style="color: var(--text-secondary);">Em Espera</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
