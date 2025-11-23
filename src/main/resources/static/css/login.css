@@ -1,0 +1,83 @@
+/* ===== Estilos Específicos - Login ===== */
+
+.login-container {
+    min-height: calc(100vh - 120px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.login-card {
+    max-width: 450px;
+    width: 100%;
+    background: var(--primary-white);
+    border-radius: 16px;
+    padding: 50px 40px;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--gray-light);
+}
+
+.login-card .logo-section {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.login-card .logo-section h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-black);
+    margin-bottom: 10px;
+}
+
+.login-card .logo-section p {
+    color: var(--gray-medium);
+    font-size: 0.95rem;
+}
+
+.login-form {
+    margin-top: 30px;
+}
+
+.login-form .form-group {
+    margin-bottom: 25px;
+}
+
+.login-form input {
+    width: 100%;
+    padding: 14px 18px;
+    border: 2px solid var(--gray-light);
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: all 0.25s ease;
+}
+
+.login-form input:focus {
+    outline: none;
+    border-color: var(--primary-black);
+    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
+}
+
+.login-form .btn-primary {
+    width: 100%;
+    padding: 14px;
+    font-size: 1rem;
+    margin-top: 10px;
+}
+
+.login-card .back-link {
+    text-align: center;
+    margin-top: 25px;
+}
+
+.login-card .back-link a {
+    color: var(--gray-medium);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.25s ease;
+}
+
+.login-card .back-link a:hover {
+    color: var(--primary-black);
+}
+

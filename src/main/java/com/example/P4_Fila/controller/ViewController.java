@@ -1,5 +1,6 @@
 package com.example.P4_Fila.controller;
 
+import com.example.P4_Fila.factory.EntityFactory;
 import com.example.P4_Fila.model.Cliente;
 import com.example.P4_Fila.model.Colaborador;
 import com.example.P4_Fila.model.Secao;
@@ -22,6 +23,7 @@ public class ViewController {
     private final ClienteRepository clienteRepository;
     private final SecaoRepository secaoRepository;
     private final ColaboradorRepository colaboradorRepository;
+    private final EntityFactory entityFactory;
     
     // Variável para armazenar colaborador logado (em produção use sessão)
     private Colaborador colaboradorLogado = null;
@@ -88,16 +90,51 @@ public class ViewController {
     @GetMapping("/criar-secao")
     public String criarSecao(Model model) {
         model.addAttribute("clientes", clienteRepository.findAll());
+        // Buscar cliente anônimo
+        Optional<Cliente> clienteAnonimo = clienteRepository.findByCpf("00000000000");
+        model.addAttribute("clienteAnonimoId", clienteAnonimo.map(Cliente::getId).orElse(null));
         return "criar-secao";
     }
     
     @PostMapping("/criar-secao")
-    public String gerarSenha(@RequestParam Long idCliente, 
-                             @RequestParam String tipoSecao, 
+    public String gerarSenha(@RequestParam(required = false) Long idCliente,
+                             @RequestParam(required = false) String clienteAnonimo,
+                             @RequestParam(required = false) String tipoSecao, 
                              Model model, 
                              RedirectAttributes redirectAttributes) {
         try {
-            Optional<Cliente> cliente = clienteRepository.findById(idCliente);
+            Long clienteIdFinal = null;
+            boolean isAnonimo = "anonimo".equals(clienteAnonimo);
+            
+            // Se cliente anônimo foi selecionado, buscar ou criar
+            if (isAnonimo) {
+                Optional<Cliente> clienteAnonimoOpt = clienteRepository.findByCpf("00000000000");
+                if (clienteAnonimoOpt.isEmpty()) {
+                    // Criar cliente anônimo se não existir
+                    Cliente novoAnonimo = entityFactory.createCliente(
+                        "Cliente Anônimo",
+                        0,
+                        "00000000000",
+                        "anonimo@sistema.com",
+                        "anonimo123"
+                    );
+                    clienteIdFinal = clienteRepository.save(novoAnonimo).getId();
+                } else {
+                    clienteIdFinal = clienteAnonimoOpt.get().getId();
+                }
+            } else {
+                // Cliente cadastrado
+                if (idCliente == null) {
+                    redirectAttributes.addFlashAttribute("error", "Selecione um cliente ou escolha Cliente Anônimo!");
+                    model.addAttribute("clientes", clienteRepository.findAll());
+                    Optional<Cliente> clienteAnonimoOpt = clienteRepository.findByCpf("00000000000");
+                    model.addAttribute("clienteAnonimoId", clienteAnonimoOpt.map(Cliente::getId).orElse(null));
+                    return "criar-secao";
+                }
+                clienteIdFinal = idCliente;
+            }
+            
+            Optional<Cliente> cliente = clienteRepository.findById(clienteIdFinal);
             if (cliente.isEmpty()) {
                 redirectAttributes.addFlashAttribute("error", "Cliente não encontrado!");
                 return "redirect:/criar-secao";
@@ -106,18 +143,30 @@ public class ViewController {
             com.example.P4_Fila.service.SecaoService secaoService = 
                 new com.example.P4_Fila.service.SecaoService(
                     secaoRepository,
-                    new com.example.P4_Fila.factory.EntityFactory()
+                    entityFactory
                 );
             
-            Secao secao = secaoService.criarSecao(idCliente, tipoSecao);
+            // Se for cliente anônimo, sempre criar como prioritária
+            String tipoFinal = isAnonimo ? "PRIORITARIA" : (tipoSecao != null ? tipoSecao : "NORMAL");
+            Secao secao = secaoService.criarSecao(clienteIdFinal, tipoFinal);
+            
             model.addAttribute("senhaGerada", secao.getSenha());
             model.addAttribute("tipoSecao", secao.getTipoSecao());
             model.addAttribute("clientes", clienteRepository.findAll());
-            redirectAttributes.addFlashAttribute("success", "Senha gerada com sucesso: " + secao.getSenha());
+            Optional<Cliente> clienteAnonimoOpt = clienteRepository.findByCpf("00000000000");
+            model.addAttribute("clienteAnonimoId", clienteAnonimoOpt.map(Cliente::getId).orElse(null));
+            
+            if (isAnonimo) {
+                redirectAttributes.addFlashAttribute("success", "✅ Senha prioritária gerada para Cliente Anônimo: " + secao.getSenha() + " - Atendimento rápido!");
+            } else {
+                redirectAttributes.addFlashAttribute("success", "Senha gerada com sucesso: " + secao.getSenha());
+            }
             
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Erro ao gerar senha: " + e.getMessage());
             model.addAttribute("clientes", clienteRepository.findAll());
+            Optional<Cliente> clienteAnonimoOpt = clienteRepository.findByCpf("00000000000");
+            model.addAttribute("clienteAnonimoId", clienteAnonimoOpt.map(Cliente::getId).orElse(null));
         }
         return "criar-secao";
     }
@@ -127,8 +176,23 @@ public class ViewController {
     public String visualizarSenhas(Model model,
                                    @RequestParam(required = false) Boolean ativo,
                                    @RequestParam(required = false) String tipo) {
-        List<Secao> secoes;
+        // Buscar senha atual (mais recente em CHAMADA ou EM_ATENDIMENTO)
+        Secao senhaAtual = secaoRepository.findAll().stream()
+            .filter(s -> ("CHAMADA".equals(s.getStatus()) || "EM_ATENDIMENTO".equals(s.getStatus())) && s.getAtivo())
+            .sorted((s1, s2) -> s2.getId().compareTo(s1.getId())) // Mais recente primeiro
+            .findFirst()
+            .orElse(null);
         
+        // Buscar últimas 3 senhas chamadas (excluindo a senha atual se houver)
+        List<Secao> senhasChamadas = secaoRepository.findAll().stream()
+            .filter(s -> ("CHAMADA".equals(s.getStatus()) || "EM_ATENDIMENTO".equals(s.getStatus())) && s.getAtivo() && 
+                        (senhaAtual == null || !s.getId().equals(senhaAtual.getId())))
+            .sorted((s1, s2) -> s2.getId().compareTo(s1.getId())) // Mais recente primeiro
+            .limit(3)
+            .toList();
+        
+        // Lista completa para filtros
+        List<Secao> secoes;
         if (ativo != null && ativo) {
             secoes = secaoRepository.findByAtivoTrue();
         } else if (tipo != null) {
@@ -139,6 +203,8 @@ public class ViewController {
             secoes = secaoRepository.findAll();
         }
         
+        model.addAttribute("senhaAtual", senhaAtual);
+        model.addAttribute("senhasChamadas", senhasChamadas);
         model.addAttribute("secoes", secoes);
         model.addAttribute("totalSenhas", secaoRepository.count());
         model.addAttribute("senhasAtivas", secaoRepository.findByAtivoTrue().size());
@@ -198,7 +264,7 @@ public class ViewController {
             return "redirect:/login";
         }
         
-        // Buscar senhas em diferentes estados
+        // Buscar senhas aguardando (AGUARDANDO)
         List<Secao> senhasAguardando = secaoRepository.findAll().stream()
             .filter(s -> "AGUARDANDO".equals(s.getStatus()) && s.getAtivo())
             .sorted((s1, s2) -> {
@@ -209,7 +275,14 @@ public class ViewController {
             })
             .toList();
         
-        // Buscar senha em atendimento por este colaborador (se houver)
+        // Buscar senha chamada por este colaborador (aguardando confirmação)
+        Secao senhaChamada = secaoRepository.findAll().stream()
+            .filter(s -> "CHAMADA".equals(s.getStatus()) && s.getAtivo() && 
+                        colaboradorLogado.getNome().equals(s.getColaboradorChamada()))
+            .findFirst()
+            .orElse(null);
+        
+        // Buscar senha em atendimento por este colaborador
         Secao senhaEmAtendimento = secaoRepository.findAll().stream()
             .filter(s -> "EM_ATENDIMENTO".equals(s.getStatus()) && s.getAtivo())
             .findFirst()
@@ -217,14 +290,17 @@ public class ViewController {
         
         model.addAttribute("colaboradorLogado", colaboradorLogado);
         model.addAttribute("senhasAguardando", senhasAguardando);
+        model.addAttribute("senhaChamada", senhaChamada);
         model.addAttribute("senhaEmAtendimento", senhaEmAtendimento);
-        model.addAttribute("meusAtendimentos", List.of()); // TODO: implementar busca de atendimentos
+        model.addAttribute("temAtendimentos", !senhasAguardando.isEmpty() || senhaChamada != null || senhaEmAtendimento != null);
         
         return "atendimento";
     }
     
     @PostMapping("/atendimento/chamar")
-    public String chamarSenha(@RequestParam Long idSecao, RedirectAttributes redirectAttributes) {
+    public String chamarSenha(@RequestParam Long idSecao, 
+                             @RequestParam(required = false) String guiche,
+                             RedirectAttributes redirectAttributes) {
         if (colaboradorLogado == null) {
             return "redirect:/login";
         }
@@ -233,6 +309,12 @@ public class ViewController {
             Optional<Secao> secao = secaoRepository.findById(idSecao);
             if (secao.isPresent()) {
                 secao.get().setStatus("CHAMADA");
+                // Registrar onde foi chamada
+                String guicheInfo = guiche != null && !guiche.isEmpty() 
+                    ? guiche 
+                    : "Guichê " + colaboradorLogado.getUsuario();
+                secao.get().setGuicheChamada(guicheInfo);
+                secao.get().setColaboradorChamada(colaboradorLogado.getNome());
                 secaoRepository.save(secao.get());
                 redirectAttributes.addFlashAttribute("success", "Senha chamada! Aguardando confirmação do cliente.");
             }
@@ -258,6 +340,29 @@ public class ViewController {
             }
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Erro ao iniciar atendimento: " + e.getMessage());
+        }
+        
+        return "redirect:/atendimento";
+    }
+    
+    @PostMapping("/atendimento/cancelar-chamada")
+    public String cancelarChamada(@RequestParam Long idSecao, RedirectAttributes redirectAttributes) {
+        if (colaboradorLogado == null) {
+            return "redirect:/login";
+        }
+        
+        try {
+            Optional<Secao> secao = secaoRepository.findById(idSecao);
+            if (secao.isPresent()) {
+                // Volta para AGUARDANDO se o cliente não compareceu
+                secao.get().setStatus("AGUARDANDO");
+                secao.get().setGuicheChamada(null);
+                secao.get().setColaboradorChamada(null);
+                secaoRepository.save(secao.get());
+                redirectAttributes.addFlashAttribute("success", "Chamada cancelada. Senha voltou para a fila de espera.");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erro ao cancelar chamada: " + e.getMessage());
         }
         
         return "redirect:/atendimento";

@@ -1,0 +1,387 @@
+/* ===== Estilos Específicos - Atendimento ===== */
+
+/* Header discreto para colaborador */
+.colaborador-info-discreta {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-right: 20px;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+}
+
+/* Estado vazio */
+.empty-state-full {
+    text-align: center;
+    padding: 100px 20px;
+    background: var(--primary-white);
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-light);
+}
+
+.empty-state-full .icon-large {
+    font-size: 6rem;
+    margin-bottom: 30px;
+    opacity: 0.3;
+}
+
+.empty-state-full h2 {
+    font-size: 1.8rem;
+    color: var(--gray-dark);
+    margin-bottom: 15px;
+}
+
+.empty-state-full p {
+    font-size: 1.1rem;
+    color: var(--gray-medium);
+}
+
+/* Layout principal */
+.atendimento-main {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+/* Senha em Atendimento - Prioridade Máxima */
+.atendimento-em-andamento {
+    background: var(--primary-white);
+    border-radius: 16px;
+    padding: 50px;
+    box-shadow: var(--shadow-lg);
+    border: 3px solid var(--primary-black);
+}
+
+.atendimento-em-andamento .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 3px solid var(--gray-light);
+}
+
+.atendimento-em-andamento .card-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--primary-black);
+}
+
+.badge-status {
+    padding: 10px 24px;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.badge-status.em-atendimento {
+    background: var(--primary-black);
+    color: var(--primary-white);
+}
+
+.badge-status.chamada {
+    background: rgba(255, 165, 0, 0.1);
+    color: #ff8c00;
+    border: 2px solid #ff8c00;
+}
+
+.senha-display-large {
+    text-align: center;
+    padding: 60px 40px;
+    background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+    border-radius: 20px;
+    color: white;
+    margin: 30px 0;
+    box-shadow: var(--shadow-lg);
+}
+
+.senha-codigo-large {
+    font-size: 7rem;
+    font-weight: 300;
+    letter-spacing: 30px;
+    margin: 30px 0;
+    text-shadow: 0 4px 20px rgba(255, 255, 255, 0.3);
+    font-family: 'Courier New', monospace;
+    line-height: 1.2;
+}
+
+.senha-info-large {
+    margin-top: 30px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin: 15px 0;
+    font-size: 1.1rem;
+}
+
+.info-row .label {
+    opacity: 0.9;
+    font-weight: 500;
+}
+
+.badge-tipo {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badge-tipo.prioritaria {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+.badge-tipo.normal {
+    background: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.acoes-atendimento {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-top: 40px;
+}
+
+.acao-form {
+    background: var(--gray-ultralight);
+    padding: 30px;
+    border-radius: 12px;
+    border: 2px solid var(--gray-light);
+}
+
+.btn-large {
+    padding: 16px 32px;
+    font-size: 1rem;
+    font-weight: 600;
+    width: 100%;
+}
+
+/* Senha Chamada - Aguardando Confirmação */
+.senha-chamada-aguardando {
+    background: var(--primary-white);
+    border-radius: 16px;
+    padding: 50px;
+    box-shadow: var(--shadow-md);
+    border: 3px solid #ff8c00;
+}
+
+.senha-chamada-aguardando .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 3px solid #ff8c00;
+}
+
+.senha-chamada-aguardando .card-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--primary-black);
+}
+
+.confirmacao-acoes {
+    margin-top: 40px;
+}
+
+.alerta-confirmacao {
+    background: rgba(255, 165, 0, 0.1);
+    border-left: 4px solid #ff8c00;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    font-size: 1.1rem;
+    color: var(--primary-black);
+}
+
+.btn-group-confirmacao {
+    display: flex;
+    gap: 20px;
+}
+
+/* Senhas Aguardando */
+.senhas-aguardando-section {
+    background: var(--primary-white);
+    border-radius: 12px;
+    padding: 40px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-light);
+}
+
+.senhas-aguardando-section .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--gray-light);
+}
+
+.senhas-aguardando-section .section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary-black);
+}
+
+.badge-count {
+    padding: 8px 18px;
+    background: var(--primary-black);
+    color: var(--primary-white);
+    border-radius: 25px;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.senhas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 15px;
+}
+
+.senha-item-card {
+    background: var(--gray-ultralight);
+    border-radius: 10px;
+    padding: 18px;
+    border-left: 3px solid var(--primary-black);
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-xs);
+}
+
+.senha-item-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-sm);
+    border-left-color: var(--primary-black);
+}
+
+.senha-header-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.senha-numero {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--primary-black);
+    font-family: 'Courier New', monospace;
+}
+
+.senha-tipo-badge {
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.senha-tipo-badge.prioritaria {
+    background: rgba(0, 0, 0, 0.1);
+    color: var(--primary-black);
+    border: 2px solid var(--primary-black);
+}
+
+.senha-tipo-badge.normal {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--gray-dark);
+    border: 1px solid var(--gray-medium);
+}
+
+.senha-info-card {
+    margin-bottom: 12px;
+}
+
+.info-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+}
+
+.info-label {
+    color: var(--gray-medium);
+    font-weight: 500;
+}
+
+.status-badge {
+    padding: 3px 10px;
+    background: var(--primary-white);
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--gray-dark);
+    border: 1px solid var(--gray-light);
+}
+
+.senha-actions-card {
+    margin-top: 12px;
+}
+
+.form-group-inline {
+    margin-bottom: 10px;
+}
+
+.input-guiche {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid var(--gray-light);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    transition: all 0.25s ease;
+}
+
+.input-guiche:focus {
+    outline: none;
+    border-color: var(--primary-black);
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+}
+
+.btn-full {
+    width: 100%;
+    padding: 10px;
+    font-size: 0.85rem;
+}
+
+/* Responsivo */
+@media (max-width: 1024px) {
+    .acoes-atendimento {
+        grid-template-columns: 1fr;
+    }
+    
+    .btn-group-confirmacao {
+        flex-direction: column;
+    }
+    
+    .senhas-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .senha-codigo-large {
+        font-size: 5rem;
+        letter-spacing: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .senha-codigo-large {
+        font-size: 4rem;
+        letter-spacing: 15px;
+    }
+    
+    .atendimento-em-andamento,
+    .senha-chamada-aguardando {
+        padding: 30px 20px;
+    }
+}

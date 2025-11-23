@@ -5,103 +5,61 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="refresh" content="10">
     <title>Visualizar Senhas - Sistema de Atendimento</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/senhas.css}">
 </head>
 <body>
-    <header>
-        <nav>
-            <div class="logo">📋 Visualização de Senhas</div>
-            <div class="nav-links">
-                <a href="/">Início</a>
-                <a href="/criar-secao">Criar Senha</a>
-                <a href="/login">Login Colaborador</a>
-            </div>
-        </nav>
-    </header>
+    <!-- Header removido para visualização em TV -->
 
-    <div class="container">
-        <div class="alert alert-info">
-            <strong>🔄 Atualização Automática:</strong> Esta página é atualizada automaticamente a cada 10 segundos.
-        </div>
-
-        <!-- Filtros -->
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">🔍 Filtrar Senhas</h2>
-            </div>
-
-            <div class="btn-group">
-                <a href="/senhas" class="btn btn-primary">Todas</a>
-                <a href="/senhas?ativo=true" class="btn btn-success">Apenas Ativas</a>
-                <a href="/senhas?tipo=NORMAL" class="btn" style="background: #fbbf24;">Normal</a>
-                <a href="/senhas?tipo=PRIORITARIA" class="btn" style="background: #ef4444;">Prioritária</a>
-            </div>
-        </div>
-
-        <!-- Lista de Senhas -->
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">🎫 Senhas Geradas</h2>
+    <div class="container" style="padding-top: 20px; max-width: 95vw;">
+        <!-- Layout Principal: Senha Atual + Últimas Chamadas -->
+        <div class="senhas-layout">
+            <!-- Senha Atual (Grande) -->
+            <div class="senha-atual-section">
+                <div class="label">🎯 Senha Atual</div>
+                
+                <div th:if="${senhaAtual != null}">
+                    <div class="senha-codigo" th:text="${senhaAtual.senha}">NA001</div>
+                    <div class="senha-info">
+                        <div><strong>Tipo:</strong> <span th:text="${senhaAtual.tipoSecao}">NORMAL</span></div>
+                        <div><strong>Status:</strong> <span class="status" th:text="${senhaAtual.status}">CHAMADA</span></div>
+                        <div class="chamada-info" th:if="${senhaAtual.guicheChamada != null}">
+                            <strong>📍</strong> <span th:text="${senhaAtual.guicheChamada}">Guichê 1</span><br>
+                            <strong>👤</strong> <span th:text="${senhaAtual.colaboradorChamada}">João Silva</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div th:unless="${senhaAtual != null}" class="empty-state">
+                    <div class="icon">📭</div>
+                    <div style="font-size: 0.95rem; margin-top: 15px;">Nenhuma senha chamada</div>
+                    <div style="font-size: 0.75rem; margin-top: 8px; opacity: 0.8;">Aguardando atendente</div>
+                </div>
             </div>
 
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Senha</th>
-                            <th>Cliente</th>
-                            <th>Tipo</th>
-                            <th>Status</th>
-                            <th>Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="secao : ${secoes}">
-                            <td th:text="${secao.id}"></td>
-                            <td><span class="senha-codigo" style="font-size: 1.2rem; letter-spacing: 3px;" th:text="${secao.senha}"></span></td>
-                            <td th:text="${secao.idCliente}"></td>
-                            <td>
-                                <span class="badge" th:classappend="${secao.tipoSecao == 'PRIORITARIA'} ? badge-danger : badge-info" 
-                                      th:text="${secao.tipoSecao}"></span>
-                            </td>
-                            <td>
-                                <span class="badge" th:classappend="${secao.ativo} ? badge-success : badge-danger">
-                                    <span th:text="${secao.ativo ? 'ATIVA' : 'INATIVA'}"></span>
-                                </span>
-                            </td>
-                            <td>
-                                <a th:if="${secao.ativo}" 
-                                   th:href="@{/senhas/atender/{id}(id=${secao.id})}" 
-                                   class="btn btn-success" 
-                                   style="padding: 6px 12px;">Atender</a>
-                                <span th:unless="${secao.ativo}" style="color: var(--text-secondary);">Finalizada</span>
-                            </td>
-                        </tr>
-                        <tr th:if="${#lists.isEmpty(secoes)}">
-                            <td colspan="6" style="text-align: center; color: var(--text-secondary);">Nenhuma senha encontrada</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Estatísticas -->
-        <div class="grid grid-3">
-            <div class="card" style="text-align: center;">
-                <div style="font-size: 2.5rem; font-weight: bold; color: var(--success-color);" th:text="${totalSenhas}">0</div>
-                <div style="color: var(--text-secondary);">Total de Senhas</div>
-            </div>
-            <div class="card" style="text-align: center;">
-                <div style="font-size: 2.5rem; font-weight: bold; color: var(--primary-color);" th:text="${senhasAtivas}">0</div>
-                <div style="color: var(--text-secondary);">Senhas Ativas</div>
-            </div>
-            <div class="card" style="text-align: center;">
-                <div style="font-size: 2.5rem; font-weight: bold; color: var(--danger-color);" th:text="${senhasPrioritarias}">0</div>
-                <div style="color: var(--text-secondary);">Prioritárias</div>
+            <!-- Últimas 3 Senhas Chamadas -->
+            <div class="senhas-chamadas-section">
+                <div class="section-title">📢 Últimas Chamadas</div>
+                
+                <div th:if="${!#lists.isEmpty(senhasChamadas)}">
+                    <div class="senha-chamada-item" th:each="senha : ${senhasChamadas}">
+                        <div class="senha-numero" th:text="${senha.senha}">NA001</div>
+                        <div class="senha-tipo" 
+                             th:classappend="${senha.tipoSecao == 'PRIORITARIA'} ? prioritaria : normal"
+                             th:text="${senha.tipoSecao}">NORMAL</div>
+                        <div class="chamada-info">
+                            <div><strong>📍</strong> <span class="guiche" th:text="${senha.guicheChamada != null ? senha.guicheChamada : 'N/A'}">Guichê 1</span></div>
+                            <div><strong>👤</strong> <span th:text="${senha.colaboradorChamada != null ? senha.colaboradorChamada : 'N/A'}">João Silva</span></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div th:if="${#lists.isEmpty(senhasChamadas)}" class="empty-state">
+                    <div class="icon">📭</div>
+                    <div style="margin-top: 10px; color: var(--gray-medium); font-size: 0.75rem;">Nenhuma chamada</div>
+                </div>
             </div>
         </div>
     </div>
 </body>
 </html>
-

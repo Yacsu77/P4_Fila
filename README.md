@@ -5,8 +5,14 @@
 1. [Visão Geral](#1-visão-geral)
 2. [Arquitetura e Padrões de Design](#2-arquitetura-e-padrões-de-design)
 3. [Modelagem](#3-modelagem)
+   - 3.1 Modelo Conceitual (Diagrama E-R)
+   - 3.2 Modelo Lógico (Tabelas)
 4. [Diagrama de Classes](#4-diagrama-de-classes)
+   - 4.1 Diagrama Completo do Sistema
+   - 4.2 Relacionamentos Principais
 5. [Diagrama de Casos de Uso](#5-diagrama-de-casos-de-uso)
+   - 5.1 Diagrama Completo com Atores
+   - 5.2 Matriz de Casos de Uso
 6. [Entidades do Sistema](#6-entidades-do-sistema)
 7. [Regras de Negócio](#7-regras-de-negócio)
 8. [Script da Base de Dados](#8-script-da-base-de-dados)
@@ -14,7 +20,10 @@
 10. [Estrutura de Pacotes](#10-estrutura-de-pacotes)
 11. [Interface Web](#11-interface-web)
 12. [Como Executar](#12-como-executar)
-13. [API REST](#13-api-rest)
+13. [Testes](#13-testes)
+14. [API REST](#14-api-rest)
+15. [Diagrama de Sequência](#15-diagrama-de-sequência)
+16. [Conclusão](#16-conclusão)
 
 ---
 
@@ -91,37 +100,124 @@ public Secao createSecao(Long idCliente, String tipoSecao) {
 ### 3.1 Modelo Conceitual (Diagrama E-R)
 
 ```
-┌─────────────────┐
-│   Departamento  │
-│  (id, nome)     │
-└────────┬────────┘
-         │ 1
-         │
-         │ N
-┌────────▼────────┐         ┌─────────────────┐
-│   Colaborador   │         │     Cliente     │
-│ (id, nome, cpf, │         │  (id, nome, cpf,│
-│ idade, usuario, │         │  email, senha)  │
-│ senha,          │         └────────┬────────┘
-│ dep_id)         │                  │ 1
-└────────┬────────┘                  │
-         │ N                         │ N
-         │                           │
-┌────────▼────────┐         ┌────────▼────────┐
-│  Atendimento    │         │     Secao       │
-│ (id, id_secao,  │────────1│  (id, senha,    │
-│ id_colab,       │         │   tipo, status, │
-│ descricao,      │         │   ativo)        │
-│ status)         │         └─────────────────┘
-└────────┬────────┘
-         │
-         │
-┌────────▼────────┐
-│      Fila       │
-│ (id, id_dept,   │
-│ id_secao,       │
-│ espera)         │
-└─────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                        DEPARTAMENTO                              │
+│                         (1,N)                                    │
+├─────────────────────────────────────────────────────────────────┤
+│ PK │ id              : BIGINT (AUTO_INCREMENT)                  │
+│    │ nome            : VARCHAR(100) UNIQUE NOT NULL              │
+└────┼────────────────────────────────────────────────────────────┘
+     │ 1
+     │ tem
+     │
+     │ N
+┌────▼────────────────────────────────────────────────────────────┐
+│                        COLABORADOR                               │
+│                         (N,1)                                    │
+├─────────────────────────────────────────────────────────────────┤
+│ PK │ id              : UUID                                      │
+│ FK │ departamento_id : BIGINT → DEPARTAMENTO(id)                │
+│    │ nome            : VARCHAR(200) NOT NULL                     │
+│    │ cpf             : VARCHAR(14) UNIQUE                        │
+│    │ idade           : INTEGER                                   │
+│    │ usuario         : VARCHAR(50) UNIQUE NOT NULL               │
+│    │ senha           : VARCHAR(255) NOT NULL                     │
+└────┼────────────────────────────────────────────────────────────┘
+     │ 1
+     │ realiza
+     │
+     │ N
+┌────┼────────────────────────────────────────────────────────────┐
+│    │                    ATENDIMENTO                              │
+│    │                     (N,1)                                   │
+├────┼────────────────────────────────────────────────────────────┤
+│ PK │ id                      : BIGINT (AUTO_INCREMENT)           │
+│ FK │ id_secao                : BIGINT → SECAO(id)               │
+│ FK │ id_colaborador          : UUID → COLABORADOR(id)           │
+│ FK │ departamento_origem_id  : BIGINT → DEPARTAMENTO(id)        │
+│ FK │ departamento_destino_id : BIGINT → DEPARTAMENTO(id)        │
+│    │ descricao_atendimento   : TEXT                              │
+│    │ status                  : VARCHAR(20)                       │
+└────┼────────────────────────────────────────────────────────────┘
+     │ N
+     │
+     │ 1
+     │ pertence a
+┌────▼────────────────────────────────────────────────────────────┐
+│                        SECAO                                    │
+│                         (1,N)                                    │
+├─────────────────────────────────────────────────────────────────┤
+│ PK │ id              : BIGINT (AUTO_INCREMENT)                  │
+│ FK │ id_cliente      : BIGINT → CLIENTE(id)                     │
+│    │ senha           : VARCHAR(20) UNIQUE NOT NULL              │
+│    │ tipo_secao      : VARCHAR(20) NOT NULL                     │
+│    │ status          : VARCHAR(20) DEFAULT 'AGUARDANDO'         │
+│    │ ativo           : BOOLEAN DEFAULT TRUE                     │
+└────┼────────────────────────────────────────────────────────────┘
+     │ 1
+     │ possui
+     │
+     │ N                    │ N
+     │                      │ está em
+     │                      │
+┌────▼──────────────────────┴──────────────────────────────────────┐
+│                        CLIENTE                                   │
+│                         (1,N)                                    │
+├─────────────────────────────────────────────────────────────────┤
+│ PK │ id              : BIGINT (AUTO_INCREMENT)                  │
+│    │ nome            : VARCHAR(200) NOT NULL                     │
+│    │ idade           : INTEGER                                   │
+│    │ cpf             : VARCHAR(14) UNIQUE                        │
+│    │ email           : VARCHAR(255) UNIQUE                       │
+│    │ senha           : VARCHAR(255)                              │
+└────┼────────────────────────────────────────────────────────────┘
+     │
+     │
+     │ N
+┌────▼────────────────────────────────────────────────────────────┐
+│                        FILA                                      │
+│                         (N,1)                                    │
+├─────────────────────────────────────────────────────────────────┤
+│ PK │ id              : BIGINT (AUTO_INCREMENT)                  │
+│ FK │ id_departamento : BIGINT → DEPARTAMENTO(id)                │
+│ FK │ id_secao        : BIGINT → SECAO(id)                       │
+│    │ espera          : BOOLEAN DEFAULT TRUE                     │
+└────┴────────────────────────────────────────────────────────────┘
+
+Relacionamentos:
+├─────────────────────────────────────────────────────────────────┤
+│ DEPARTAMENTO (1) ──< COLABORADOR (N)                            │
+│   Um departamento possui muitos colaboradores                   │
+│                                                                  │
+│ DEPARTAMENTO (1) ──< FILA (N)                                   │
+│   Um departamento possui muitas filas                           │
+│                                                                  │
+│ CLIENTE (1) ──< SECAO (N)                                       │
+│   Um cliente possui muitas seções (senhas)                      │
+│                                                                  │
+│ SECAO (1) ──< ATENDIMENTO (N)                                   │
+│   Uma seção pode ter vários atendimentos                        │
+│                                                                  │
+│ COLABORADOR (1) ──< ATENDIMENTO (N)                             │
+│   Um colaborador realiza vários atendimentos                    │
+│                                                                  │
+│ SECAO (1) ──< FILA (N)                                          │
+│   Uma seção pode estar em várias filas                          │
+│                                                                  │
+│ DEPARTAMENTO (1) ──< ATENDIMENTO (N) [origem]                  │
+│   Um departamento pode ter atendimentos como origem             │
+│                                                                  │
+│ DEPARTAMENTO (1) ──< ATENDIMENTO (N) [destino]                 │
+│   Um departamento pode receber atendimentos transferidos        │
+└─────────────────────────────────────────────────────────────────┘
+
+Legenda:
+├─────────────────────────────────────────────────────────────────┤
+│ PK  - Primary Key (Chave Primária)                              │
+│ FK  - Foreign Key (Chave Estrangeira)                           │
+│ (1,N) - Cardinalidade (1 para N)                                │
+│ →   - Relacionamento de FK                                      │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ### 3.2 Modelo Lógico (Tabelas)
@@ -186,129 +282,356 @@ public Secao createSecao(Long idCliente, String tipoSecao) {
 
 ## 4. Diagrama de Classes
 
+### 4.1 Diagrama Completo do Sistema
+
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        H2ConnectionSingleton                │
-├─────────────────────────────────────────────────────────────┤
-│ - instance: H2ConnectionSingleton                           │
-│ - dataSource: DataSource                                    │
-│ - connection: Connection                                    │
-│ + getInstance(): H2ConnectionSingleton                      │
-│ + getDataSource(): DataSource                               │
-│ + getConnection(): Connection                               │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         <<Singleton>>                                    │
+│                    H2ConnectionSingleton                                 │
+├─────────────────────────────────────────────────────────────────────────┤
+│ - instance: H2ConnectionSingleton (static)                              │
+│ - dataSource: DataSource                                                │
+│ - connection: Connection                                                │
+│ - url: String                                                           │
+│ - username: String                                                      │
+│ - password: String                                                      │
+├─────────────────────────────────────────────────────────────────────────┤
+│ + getInstance(): H2ConnectionSingleton (static, synchronized)           │
+│ + getDataSource(): DataSource                                           │
+│ + getConnection(): Connection                                           │
+│ + closeConnection(): void                                               │
+│ + isConnectionActive(): boolean                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+                              │
+                              │ uses
+                              ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        javax.sql.DataSource                              │
+└─────────────────────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────────┐
-│                         EntityFactory                        │
-├─────────────────────────────────────────────────────────────┤
-│ + createCliente(...): Cliente                               │
-│ + createDepartamento(...): Departamento                     │
-│ + createColaborador(...): Colaborador                       │
-│ + createSecao(...): Secao                                   │
-│ + createAtendimento(...): Atendimento                       │
-│ + createFila(...): Fila                                     │
-│ - generateSenha(...): String                                │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         <<Factory>>                                      │
+│                        EntityFactory                                     │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│ + createCliente(nome, idade, cpf, email, senha): Cliente               │
+│ + createDepartamento(nome): Departamento                                │
+│ + createColaborador(nome, cpf, idade, deptId, user, senha): Colaborador│
+│ + createSecao(idCliente, tipoSecao): Secao                              │
+│ + createAtendimento(idSecao, idColab, desc): Atendimento                │
+│ + createFila(idDept, idSecao): Fila                                     │
+│ - generateSenha(tipoSecao): String                                      │
+└─────────────────────────────────────────────────────────────────────────┘
+                              │
+                              │ creates
+                              ▼
+        ┌─────────────────────────────────────────┐
+        │           Model Classes                  │
+        └─────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────────┐
-│                        Secao                                │
-├─────────────────────────────────────────────────────────────┤
-│ - id: Long                                                  │
-│ - idCliente: Long                                           │
-│ - senha: String                                             │
-│ - tipoSecao: String                                         │
-│ - status: String                                            │
-│ - ativo: Boolean                                            │
-│ - cliente: Cliente                                          │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                            Cliente                                       │
+│                         @Entity                                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│ - id: Long (@Id, @GeneratedValue)                                       │
+│ - nome: String (NOT NULL)                                               │
+│ - idade: Integer                                                        │
+│ - cpf: String (UNIQUE)                                                  │
+│ - email: String (UNIQUE)                                                │
+│ - senha: String                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+                              │
+                              │ 1
+                              │
+                              │ N
+┌─────────────────────────────────────────────────────────────────────────┐
+│                            Secao                                         │
+│                         @Entity                                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│ - id: Long (@Id, @GeneratedValue)                                       │
+│ - idCliente: Long (@ManyToOne → Cliente)                                │
+│ - senha: String (UNIQUE, NOT NULL)                                      │
+│ - tipoSecao: String (NORMAL/PRIORITARIA)                                │
+│ - status: String (AGUARDANDO/CHAMADA/EM_ATENDIMENTO/...)                │
+│ - ativo: Boolean                                                        │
+│ - cliente: Cliente (lazy)                                               │
+└─────────────────────────────────────────────────────────────────────────┘
+                              │ 1
+                              │
+                              │ N
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         Atendimento                                      │
+│                         @Entity                                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│ - id: Long (@Id, @GeneratedValue)                                       │
+│ - idSecao: Long (@ManyToOne → Secao)                                    │
+│ - idColaborador: UUID (@ManyToOne → Colaborador)                        │
+│ - descricaoAtendimento: String (TEXT)                                   │
+│ - status: String                                                        │
+│ - departamentoOrigemId: Long                                            │
+│ - departamentoDestinoId: Long                                           │
+│ - secao: Secao (lazy)                                                   │
+│ - colaborador: Colaborador (lazy)                                       │
+└─────────────────────────────────────────────────────────────────────────┘
+                              │ N
+                              │
+                              │ 1
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         Colaborador                                      │
+│                         @Entity                                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│ - id: UUID (@Id, @GeneratedValue)                                       │
+│ - nome: String (NOT NULL)                                               │
+│ - cpf: String (UNIQUE)                                                  │
+│ - idade: Integer                                                        │
+│ - usuario: String (UNIQUE, NOT NULL)                                    │
+│ - senha: String (NOT NULL)                                              │
+│ - departamentoId: Long (@ManyToOne → Departamento)                      │
+│ - departamento: Departamento (lazy)                                     │
+└─────────────────────────────────────────────────────────────────────────┘
+                              │ N
+                              │
+                              │ 1
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        Departamento                                      │
+│                         @Entity                                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│ - id: Long (@Id, @GeneratedValue)                                       │
+│ - nome: String (UNIQUE, NOT NULL)                                       │
+└─────────────────────────────────────────────────────────────────────────┘
+                              │ 1
+                              │
+                              │ N
+┌─────────────────────────────────────────────────────────────────────────┐
+│                            Fila                                          │
+│                         @Entity                                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│ - id: Long (@Id, @GeneratedValue)                                       │
+│ - idDepartamento: Long (@ManyToOne → Departamento)                      │
+│ - idSecao: Long (@ManyToOne → Secao)                                    │
+│ - espera: Boolean                                                       │
+│ - departamento: Departamento (lazy)                                     │
+│ - secao: Secao (lazy)                                                   │
+└─────────────────────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────────┐
-│                     ViewController                          │
-├─────────────────────────────────────────────────────────────┤
-│ - clienteRepository: ClienteRepository                      │
-│ - secaoRepository: SecaoRepository                          │
-│ - colaboradorRepository: ColaboradorRepository              │
-│ - colaboradorLogado: Colaborador                            │
-│ + index(): String                                           │
-│ + clientes(): String                                        │
-│ + criarSecao(): String                                      │
-│ + visualizarSenhas(): String                                │
-│ + login(): String                                           │
-│ + atendimento(): String                                     │
-│ + chamarSenha(): String                                     │
-│ + iniciarAtendimento(): String                              │
-│ + finalizarAtendimento(): String                            │
-│ + transferirAtendimento(): String                           │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        <<Repository>>                                    │
+│                     ClienteRepository                                    │
+│              extends JpaRepository<Cliente, Long>                        │
+├─────────────────────────────────────────────────────────────────────────┤
+│ + findByCpf(cpf): Optional<Cliente>                                     │
+│ + findByEmail(email): Optional<Cliente>                                 │
+└─────────────────────────────────────────────────────────────────────────┘
+                              │
+                              │ implements
+                              ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        <<Service>>                                       │
+│                        ClienteService                                    │
+├─────────────────────────────────────────────────────────────────────────┤
+│ - clienteRepository: ClienteRepository                                  │
+│ - entityFactory: EntityFactory                                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│ + criarCliente(...): Cliente                                            │
+│ + listarClientes(): List<Cliente>                                       │
+│ + buscarPorId(id): Optional<Cliente>                                    │
+│ + buscarPorCpf(cpf): Optional<Cliente>                                  │
+│ + atualizarCliente(id, cliente): Cliente                                │
+│ + deletarCliente(id): void                                              │
+└─────────────────────────────────────────────────────────────────────────┘
+                              │
+                              │ uses
+                              ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      <<Controller>>                                      │
+│                       ViewController                                     │
+│                      @Controller                                         │
+├─────────────────────────────────────────────────────────────────────────┤
+│ - clienteRepository: ClienteRepository                                  │
+│ - secaoRepository: SecaoRepository                                      │
+│ - colaboradorRepository: ColaboradorRepository                          │
+│ - colaboradorLogado: Colaborador                                        │
+├─────────────────────────────────────────────────────────────────────────┤
+│ + index(): String                                                       │
+│ + clientes(): String                                                    │
+│ + salvarCliente(...): String                                            │
+│ + editarCliente(id): String                                             │
+│ + deletarCliente(id): String                                            │
+│ + criarSecao(): String                                                  │
+│ + gerarSenha(...): String                                               │
+│ + visualizarSenhas(...): String                                         │
+│ + login(): String                                                       │
+│ + fazerLogin(...): String                                               │
+│ + atendimento(): String                                                 │
+│ + chamarSenha(...): String                                              │
+│ + iniciarAtendimento(...): String                                       │
+│ + finalizarAtendimento(...): String                                     │
+│ + transferirAtendimento(...): String                                    │
+└─────────────────────────────────────────────────────────────────────────┘
+
+Legenda:
+├─────────────────────────────────────────────────────────────────────────┤
+│ <<Singleton>>   - Padrão Singleton                                      │
+│ <<Factory>>     - Padrão Factory                                        │
+│ <<Repository>>  - Spring Data Repository                                │
+│ <<Service>>     - Service Layer                                         │
+│ <<Controller>>  - Spring MVC Controller                                 │
+│ @Entity         - JPA Entity                                            │
+│ @ManyToOne      - Relacionamento N:1                                    │
+│ →               - Direção do relacionamento                             │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Relacionamentos:**
-- `H2ConnectionSingleton` → implementa Singleton Pattern
-- `EntityFactory` → implementa Factory Pattern
-- `ViewController` → usa Repositories → usa Models
-- Models → relacionamentos JPA (@ManyToOne, @OneToMany)
+### 4.2 Relacionamentos Principais
+
+1. **H2ConnectionSingleton** → implementa Singleton Pattern
+   - Garante instância única de conexão
+   - Usa DataSource do Java
+
+2. **EntityFactory** → implementa Factory Pattern
+   - Cria instâncias de todas as entidades
+   - Encapsula lógica de criação
+
+3. **ViewController** → usa Repositories → usa Models
+   - Controller depende de Repositories
+   - Repositories dependem de Models (entidades JPA)
+
+4. **Models** → relacionamentos JPA
+   - `Cliente 1:N Secao` (@OneToMany/@ManyToOne)
+   - `Secao 1:N Atendimento` (@OneToMany/@ManyToOne)
+   - `Colaborador 1:N Atendimento` (@OneToMany/@ManyToOne)
+   - `Departamento 1:N Colaborador` (@OneToMany/@ManyToOne)
+   - `Departamento 1:N Fila` (@OneToMany/@ManyToOne)
+   - `Secao 1:N Fila` (@OneToMany/@ManyToOne)
 
 ---
 
 ## 5. Diagrama de Casos de Uso
 
-### 5.1 Ator: Cliente
+### 5.1 Diagrama Completo com Atores
 
 ```
-┌─────────────────────────────────────────────────┐
-│                    Cliente                      │
-└─────────────────────────────────────────────────┘
-           │
-           ├── Cadastrar Cliente
-           │
-           ├── Gerar Senha
-           │   ├── Normal
-           │   └── Prioritária
-           │
-           └── Visualizar Senhas
+┌──────────────────────────┐                    ┌──────────────────────────┐
+│       <<Actor>>          │                    │       <<Actor>>          │
+│        Cliente           │                    │      Colaborador         │
+└──────────┬───────────────┘                    └──────────┬───────────────┘
+           │                                               │
+           │                                               │
+           │         ┌─────────────────────────────────────┘
+           │         │
+           │         │
+           ▼         ▼
+    ┌─────────────────────────────────────────────────────────────┐
+    │                  <<System>>                                  │
+    │              Sistema P4 Fila                                 │
+    ├─────────────────────────────────────────────────────────────┤
+    │                                                              │
+    │  UC01: Cadastrar Cliente                                    │
+    │      │                                                       │
+    │      ├─ Inclui: Validar CPF único                           │
+    │      └─ Inclui: Validar Email único                         │
+    │                                                              │
+    │  UC02: Editar Cliente                                       │
+    │      │                                                       │
+    │      └─ Estende: UC01                                       │
+    │                                                              │
+    │  UC03: Excluir Cliente                                      │
+    │                                                              │
+    │  UC04: Gerar Senha Normal                                   │
+    │      │                                                       │
+    │      ├─ Pré-condição: Cliente cadastrado                    │
+    │      ├─ Pós-condição: Senha gerada com prefixo NA           │
+    │      └─ Inclui: Gerar código automático                     │
+    │                                                              │
+    │  UC05: Gerar Senha Prioritária                              │
+    │      │                                                       │
+    │      ├─ Pré-condição: Cliente cadastrado                    │
+    │      ├─ Pós-condição: Senha gerada com prefixo PX           │
+    │      └─ Inclui: Gerar código automático                     │
+    │                                                              │
+    │  UC06: Visualizar Senhas                                    │
+    │      │                                                       │
+    │      ├─ Inclui: Filtrar por status                          │
+    │      ├─ Inclui: Filtrar por tipo                            │
+    │      └─ Inclui: Ordenar por prioridade                      │
+    │                                                              │
+    │  UC07: Login Colaborador                                    │
+    │      │                                                       │
+    │      ├─ Pré-condição: Colaborador cadastrado                │
+    │      ├─ Inclui: Validar credenciais                         │
+    │      └─ Pós-condição: Sessão criada                         │
+    │                                                              │
+    │  UC08: Visualizar Senhas Aguardando                         │
+    │      │                                                       │
+    │      ├─ Pré-condição: Colaborador logado                    │
+    │      └─ Inclui: Priorizar senhas prioritárias               │
+    │                                                              │
+    │  UC09: Chamar Senha                                         │
+    │      │                                                       │
+    │      ├─ Pré-condição: Senha com status AGUARDANDO           │
+    │      ├─ Inclui: Atualizar status para CHAMADA               │
+    │      └─ Pós-condição: Senha chamada                         │
+    │                                                              │
+    │  UC10: Confirmar Cliente                                    │
+    │      │                                                       │
+    │      ├─ Pré-condição: Senha com status CHAMADA              │
+    │      ├─ Inclui: Atualizar status para EM_ATENDIMENTO        │
+    │      └─ Pós-condição: Cliente confirmado                    │
+    │                                                              │
+    │  UC11: Finalizar Atendimento                                │
+    │      │                                                       │
+    │      ├─ Pré-condição: Senha em EM_ATENDIMENTO               │
+    │      ├─ Inclui: Registrar descrição                         │
+    │      ├─ Inclui: Atualizar status para FINALIZADA            │
+    │      └─ Pós-condição: Atendimento finalizado                │
+    │                                                              │
+    │  UC12: Transferir Atendimento                               │
+    │      │                                                       │
+    │      ├─ Pré-condição: Senha em EM_ATENDIMENTO               │
+    │      ├─ Inclui: Informar departamento destino               │
+    │      ├─ Inclui: Registrar motivo                            │
+    │      ├─ Inclui: Atualizar status para TRANSFERIDA           │
+    │      └─ Pós-condição: Atendimento transferido               │
+    │                                                              │
+    │  UC13: Listar Atendimentos                                  │
+    │      │                                                       │
+    │      ├─ Pré-condição: Colaborador logado                    │
+    │      └─ Inclui: Filtrar por colaborador                     │
+    │                                                              │
+    └─────────────────────────────────────────────────────────────┘
+
+Legenda:
+├─────────────────────────────────────────────────────────────┤
+│ <<Actor>>       - Ator do sistema                           │
+│ <<System>>      - Sistema                                    │
+│ ───────         - Relacionamento                            │
+│ ├─ Inclui       - Caso de uso incluído                      │
+│ ├─ Estende      - Caso de uso estendido                     │
+│ ├─ Pré-condição - Condição necessária antes                 │
+│ └─ Pós-condição - Estado resultante                         │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### 5.2 Ator: Colaborador
+### 5.2 Matriz de Casos de Uso
 
-```
-┌─────────────────────────────────────────────────┐
-│                 Colaborador                     │
-└─────────────────────────────────────────────────┘
-           │
-           ├── Login
-           │
-           ├── Visualizar Senhas Aguardando
-           │
-           ├── Chamar Senha
-           │
-           ├── Confirmar Cliente
-           │
-           ├── Atender Cliente
-           │   ├── Finalizar Atendimento
-           │   └── Transferir para Outro Departamento
-           │
-           └── Ver Histórico de Atendimentos
-```
-
-### 5.3 Sistema Completo
-
-```
-┌──────────────────────────────────────────────────────────┐
-│                    Sistema P4 Fila                       │
-├──────────────────────────────────────────────────────────┤
-│                                                           │
-│  UC01: Cadastrar Cliente                                 │
-│  UC02: Gerar Senha (Normal/Prioritária)                  │
-│  UC03: Visualizar Senhas                                 │
-│  UC04: Login Colaborador                                 │
-│  UC05: Chamar Senha                                      │
-│  UC06: Confirmar Cliente                                 │
-│  UC07: Finalizar Atendimento                             │
-│  UC08: Transferir Atendimento                            │
-│  UC09: Listar Atendimentos                               │
-│                                                           │
-└──────────────────────────────────────────────────────────┘
-```
+| UC | Caso de Uso | Ator | Pré-Condição | Pós-Condição |
+|----|-------------|------|--------------|--------------|
+| UC01 | Cadastrar Cliente | Cliente | Sistema acessível | Cliente cadastrado |
+| UC02 | Editar Cliente | Cliente | Cliente existente | Cliente atualizado |
+| UC03 | Excluir Cliente | Cliente | Cliente existente | Cliente removido |
+| UC04 | Gerar Senha Normal | Cliente | Cliente cadastrado | Senha NA### criada |
+| UC05 | Gerar Senha Prioritária | Cliente | Cliente cadastrado | Senha PX### criada |
+| UC06 | Gerar Senha Cliente Anônimo | Cliente | Sistema acessível | Senha PX### criada automaticamente |
+| UC07 | Visualizar Senhas | Cliente | Sistema acessível | Lista exibida |
+| UC08 | Login Colaborador | Colaborador | Credenciais válidas | Sessão criada |
+| UC09 | Visualizar Senhas Aguardando | Colaborador | Logado | Lista ordenada |
+| UC10 | Chamar Senha | Colaborador | Senha AGUARDANDO | Status CHAMADA, guichê registrado |
+| UC11 | Confirmar Cliente | Colaborador | Senha CHAMADA | Status EM_ATENDIMENTO |
+| UC12 | Cancelar Chamada | Colaborador | Senha CHAMADA | Status volta para AGUARDANDO |
+| UC13 | Finalizar Atendimento | Colaborador | EM_ATENDIMENTO | Status FINALIZADA |
+| UC14 | Transferir Atendimento | Colaborador | EM_ATENDIMENTO | Status TRANSFERIDA |
+| UC15 | Listar Atendimentos | Colaborador | Logado | Histórico exibido |
 
 ---
 
@@ -342,14 +665,16 @@ Funcionário responsável por atendimentos.
 ### 6.3 Secao
 Senha de atendimento gerada para cliente.
 
-| Campo      | Tipo    | Descrição                                    |
-|------------|---------|----------------------------------------------|
-| id         | Long    | Identificador                                |
-| idCliente  | Long    | FK para Cliente                              |
-| senha      | String  | Código gerado (NA### ou PX###)               |
-| tipoSecao  | String  | NORMAL ou PRIORITARIA                        |
-| status     | String  | AGUARDANDO/CHAMADA/EM_ATENDIMENTO/FINALIZADA/TRANSFERIDA |
-| ativo      | Boolean | Indica se está ativa                         |
+| Campo              | Tipo    | Descrição                                    |
+|--------------------|---------|----------------------------------------------|
+| id                 | Long    | Identificador                                |
+| idCliente          | Long    | FK para Cliente                              |
+| senha              | String  | Código gerado (NA### ou PX###)               |
+| tipoSecao          | String  | NORMAL ou PRIORITARIA                        |
+| status             | String  | AGUARDANDO/CHAMADA/EM_ATENDIMENTO/FINALIZADA/TRANSFERIDA |
+| ativo              | Boolean | Indica se está ativa                         |
+| guicheChamada      | String  | Identificador do guichê que chamou           |
+| colaboradorChamada | String  | Nome do colaborador que chamou               |
 
 ### 6.4 Atendimento
 Registro de atendimento realizado.
@@ -372,21 +697,38 @@ Registro de atendimento realizado.
 - Normal: prefixo `NA` + número sequencial (ex: NA001, NA002)
 - Prioritária: prefixo `PX` + número sequencial (ex: PX001, PX002)
 - Implementada via **Factory Pattern**
+- **Cliente Anônimo**: Permite geração de senha prioritária sem cadastro prévio de cliente
 
-### RN02: Fluxo de Atendimento
-1. **AGUARDANDO** → Senha criada
-2. **CHAMADA** → Colaborador chama senha
-3. **EM_ATENDIMENTO** → Cliente confirmado pelo colaborador
-4. **FINALIZADA** → Atendimento concluído
+### RN02: Fluxo de Atendimento Completo
+1. **AGUARDANDO** → Senha criada, aguardando chamada
+2. **CHAMADA** → Colaborador chama senha para o guichê (registra guichê e colaborador)
+3. **EM_ATENDIMENTO** → Cliente confirmou presença, atendimento iniciado
+4. **FINALIZADA** → Atendimento concluído (senha desativada)
 5. **TRANSFERIDA** → Enviada para outro departamento
+
+**Fluxo detalhado:**
+- Colaborador visualiza senhas em espera (ordenadas: prioritárias primeiro)
+- Colaborador chama senha (define guichê opcional)
+- Sistema aguarda confirmação de presença do cliente
+- Se cliente confirmar → Status muda para EM_ATENDIMENTO
+- Se cliente não comparecer → Senha volta para AGUARDANDO
+- Durante atendimento: pode finalizar ou transferir para outro departamento
 
 ### RN03: Priorização
 - Senhas prioritárias (`PX`) têm prioridade sobre normais (`NA`)
 - Ordenação automática na lista de aguardando
+- Cliente anônimo sempre gera senha prioritária
 
 ### RN04: Atendimento Simultâneo
 - Um colaborador pode atender apenas uma senha por vez
 - Necessário finalizar ou transferir para chamar outra
+- Sistema impede múltiplos atendimentos simultâneos
+
+### RN05: Cliente Anônimo
+- Permite gerar senha sem cadastro prévio de cliente
+- Senha gerada automaticamente como **PRIORITÁRIA**
+- Cliente padrão "Cliente Anônimo" é criado automaticamente no sistema
+- Ideal para atendimento rápido
 
 ---
 
@@ -428,6 +770,8 @@ CREATE TABLE secoes (
     tipo_secao VARCHAR(20) NOT NULL,
     status VARCHAR(20) DEFAULT 'AGUARDANDO',
     ativo BOOLEAN NOT NULL DEFAULT TRUE,
+    guiche_chamada VARCHAR(100),
+    colaborador_chamada VARCHAR(200),
     FOREIGN KEY (id_cliente) REFERENCES clientes(id)
 );
 
@@ -518,19 +862,147 @@ src/main/java/com/example/P4_Fila/
 
 ## 11. Interface Web
 
-### Design
-- **Tema:** Preto e Branco elegante
+### 11.1 Design e Arquitetura Frontend
+
+#### Estrutura de CSS Modularizada
+O sistema utiliza CSS modularizado, com arquivos específicos para cada tela:
+
+- **`base.css`** - Estilos compartilhados (header, botões, formulários, etc.)
+- **`index.css`** - Tela de apresentação inicial
+- **`clientes.css`** - Gerenciamento de clientes
+- **`criar-secao.css`** - Criação de senhas
+- **`senhas.css`** - Visualização de senhas (TV estática)
+- **`login.css`** - Autenticação de colaboradores
+- **`atendimento.css`** - Painel de atendimento
+
+#### Características de Design
+- **Tema:** Preto e Branco elegante e profissional
 - **Efeito:** Glassmorphism (vidro com blur)
 - **Responsivo:** Adaptável a todos os dispositivos
 - **Animações:** Transições suaves
+- **Tipografia:** Moderna e legível
 
-### Telas
-1. **Dashboard** (`/`) - Estatísticas e acesso rápido
-2. **Clientes** (`/clientes`) - CRUD de clientes
-3. **Criar Senha** (`/criar-secao`) - Geração de senhas
-4. **Visualizar Senhas** (`/senhas`) - Lista de senhas
-5. **Login** (`/login`) - Autenticação de colaboradores
-6. **Atendimento** (`/atendimento`) - Painel de atendimento
+### 11.2 Telas do Sistema
+
+#### 1. **Tela de Apresentação** (`/`)
+- **Descrição:** Tela inicial do sistema com menu dropdown
+- **Menu Dropdown:**
+  - **Senhas** (submenu):
+    - ➜ Gerar Senha
+    - ➜ Visualizar Senhas
+  - **Login Colaborador**
+- **Seções:**
+  - Cards de funcionalidades (6 cards)
+  - Estatísticas do sistema (Clientes, Senhas Ativas, Em Espera)
+  - Footer com informações do sistema
+
+#### 2. **Gerenciar Clientes** (`/clientes`)
+- **Descrição:** CRUD completo de clientes
+- **Funcionalidades:**
+  - Cadastrar novo cliente
+  - Editar cliente existente
+  - Excluir cliente
+  - Listar todos os clientes em tabela
+
+#### 3. **Criar Senha** (`/criar-secao`)
+- **Descrição:** Geração de senhas de atendimento
+- **Modos de Atendimento:**
+  - **Cliente Cadastrado:**
+    - Seleção de cliente
+    - Escolha do tipo (Normal ou Prioritária)
+  - **Cliente Anônimo (Rápido):**
+    - Geração automática de senha prioritária
+    - Sem necessidade de cadastro prévio
+- **Tipos de Senha:**
+  - Normal: prefixo `NA###` (ex: NA001, NA002)
+  - Prioritária: prefixo `PX###` (ex: PX001, PX002)
+
+#### 4. **Visualizar Senhas** (`/senhas`)
+- **Descrição:** Tela otimizada para exibição em TV estática
+- **Layout Responsivo:**
+  - **Lado Esquerdo:** Senha atual chamada (grande destaque)
+    - Número da senha em destaque (fonte grande)
+    - Tipo (Normal/Prioritária)
+    - Status atual
+    - Guichê onde foi chamada (se disponível)
+    - Nome do colaborador que chamou (se disponível)
+  - **Lado Direito:** Últimas 3 senhas chamadas
+    - Cards compactos com informações essenciais
+    - Número da senha, tipo, guichê e colaborador
+    - Layout sempre lado a lado, adaptando ao tamanho da tela
+- **Características:**
+  - Layout flexível que se adapta ao tamanho da tela
+  - Ocupa 95% da largura da viewport
+  - Sempre mantém layout lado a lado (nunca empilha verticalmente)
+  - Design compacto para melhor visualização em TV
+- **Informações Exibidas:**
+  - Número da senha
+  - Tipo (Normal/Prioritária)
+  - Guichê onde foi chamada
+  - Nome do colaborador que chamou
+  - Status atual
+- **Atualização:** Automática a cada 10 segundos
+- **Otimizado para:** Visualização estática em TV/monitor de qualquer tamanho
+
+#### 5. **Login Colaborador** (`/login`)
+- **Descrição:** Autenticação de colaboradores
+- **Campos:**
+  - Usuário
+  - Senha
+- **Credenciais Padrão:**
+  - Usuário: `1`, `2` ou `3`
+  - Senha: `123`
+
+#### 6. **Painel de Atendimento** (`/atendimento`)
+- **Descrição:** Painel completo para colaboradores gerenciarem atendimentos
+- **Estados Visuais:**
+  1. **Nenhum Atendimento:** Mensagem informativa
+  2. **Senhas Aguardando:** Cards compactos com senhas para chamar
+  3. **Senha Chamada:** Aguardando confirmação do cliente
+  4. **Em Atendimento:** Painel de controle completo
+- **Fluxo de Atendimento:**
+  - **Chamar Senha:**
+    - Seleção de senha da lista de espera
+    - Opção de informar guichê
+    - Senha muda para status "CHAMADA"
+  - **Confirmar Cliente:**
+    - Botão para confirmar presença do cliente
+    - Opção de cancelar chamada se cliente não comparecer
+    - Status muda para "EM_ATENDIMENTO"
+  - **Durante Atendimento:**
+    - Finalizar atendimento (com descrição)
+    - Transferir para outro departamento (com motivo)
+- **Recursos:**
+  - Cards compactos para senhas aguardando
+  - Informações do colaborador discretas no header
+  - Foco visual no atendimento ativo
+  - Atualização automática a cada 15 segundos
+
+### 11.3 Funcionalidades Especiais
+
+#### Cliente Anônimo
+- Permite geração rápida de senha sem cadastro
+- Senha gerada automaticamente como **PRIORITÁRIA**
+- Ideal para atendimento rápido
+- Cliente padrão criado automaticamente no sistema
+
+#### Rastreamento de Chamadas
+- Sistema registra onde e por quem a senha foi chamada
+- Campos adicionais na entidade `Secao`:
+  - `guicheChamada`: Identificador do guichê
+  - `colaboradorChamada`: Nome do colaborador que chamou
+
+#### Visualização em TV
+- Tela `/senhas` otimizada para exibição estática
+- Header removido para visualização limpa
+- Filtros e estatísticas removidos
+- Layout responsivo adaptável ao tamanho da tela
+- **Layout lado a lado:**
+  - Esquerda: Senha atual (2/3 da largura)
+  - Direita: Últimas 3 senhas chamadas (1/3 da largura)
+- Ocupa 95% da largura da viewport
+- Sempre mantém layout horizontal (nunca empilha verticalmente)
+- Foco na senha atual e últimas chamadas
 
 ---
 
@@ -559,7 +1031,161 @@ mvn spring-boot:run
 
 ---
 
-## 13. API REST
+## 13. Testes
+
+### 13.1 Estratégia de Testes
+
+O projeto utiliza **JUnit 5** e **Mockito** para testes unitários, seguindo as melhores práticas de TDD (Test-Driven Development).
+
+### 13.2 Estrutura de Testes
+
+```
+src/test/java/com/example/P4_Fila/
+│
+├── factory/
+│   └── EntityFactoryTest.java          # Testes do Factory Pattern
+│
+├── service/
+│   ├── ClienteServiceTest.java         # Testes do ClienteService
+│   └── SecaoServiceTest.java           # Testes do SecaoService
+│
+├── config/
+│   └── H2ConnectionSingletonTest.java  # Testes do Singleton Pattern
+│
+└── test/
+    └── CasosDeTeste.java               # Documentação de casos de teste
+```
+
+### 13.3 Executar Testes
+
+```bash
+# Executar todos os testes
+mvn test
+
+# Executar testes com relatório de cobertura
+mvn test jacoco:report
+
+# Executar um teste específico
+mvn test -Dtest=EntityFactoryTest
+```
+
+### 13.4 Cobertura de Testes
+
+#### Testes Unitários Implementados
+
+**EntityFactoryTest** - Testa o Factory Pattern
+- ✅ Criar Cliente
+- ✅ Criar Departamento
+- ✅ Criar Colaborador
+- ✅ Criar Seção Normal (NA###)
+- ✅ Criar Seção Prioritária (PX###)
+- ✅ Criar Atendimento
+- ✅ Criar Fila
+
+**ClienteServiceTest** - Testa lógica de negócio de clientes
+- ✅ Criar Cliente
+- ✅ Listar Clientes
+- ✅ Buscar Cliente por ID
+- ✅ Atualizar Cliente
+- ✅ Deletar Cliente
+
+**SecaoServiceTest** - Testa lógica de negócio de seções
+- ✅ Criar Seção
+- ✅ Listar Seções
+- ✅ Buscar Seção por ID
+- ✅ Buscar Seção por Senha
+- ✅ Buscar Seções Ativas
+- ✅ Desativar Seção
+
+**H2ConnectionSingletonTest** - Testa o Singleton Pattern
+- ✅ Retornar mesma instância
+- ✅ Criar DataSource
+
+### 13.5 Casos de Teste Documentados
+
+O arquivo `CasosDeTeste.java` documenta os principais casos de teste funcionais:
+
+#### CT01: Cadastrar Cliente com Sucesso
+- **Objetivo:** Validar cadastro de novo cliente
+- **Entrada:** Dados válidos do cliente
+- **Resultado Esperado:** Cliente cadastrado e exibido na lista
+
+#### CT02: Cadastrar Cliente com CPF Duplicado
+- **Objetivo:** Validar unicidade de CPF
+- **Entrada:** CPF já existente
+- **Resultado Esperado:** Erro de validação
+
+#### CT03: Gerar Senha Normal
+- **Objetivo:** Validar geração de senha tipo Normal
+- **Entrada:** Cliente selecionado, tipo Normal
+- **Resultado Esperado:** Senha gerada com prefixo "NA"
+
+#### CT04: Gerar Senha Prioritária
+- **Objetivo:** Validar geração de senha tipo Prioritária
+- **Entrada:** Cliente selecionado, tipo Prioritária
+- **Resultado Esperado:** Senha gerada com prefixo "PX"
+
+#### CT05: Gerar Senha Cliente Anônimo
+- **Objetivo:** Validar geração rápida de senha sem cadastro
+- **Entrada:** Modo "Cliente Anônimo" selecionado
+- **Resultado Esperado:** Senha prioritária gerada automaticamente, cliente anônimo criado
+
+#### CT06: Login Colaborador com Sucesso
+- **Objetivo:** Validar autenticação de colaborador
+- **Entrada:** Usuário e senha válidos
+- **Resultado Esperado:** Redirecionamento para painel de atendimento
+
+#### CT06: Login Colaborador com Credenciais Inválidas
+- **Objetivo:** Validar segurança de login
+- **Entrada:** Credenciais inválidas
+- **Resultado Esperado:** Mensagem de erro, acesso negado
+
+#### CT07: Chamar Senha
+- **Objetivo:** Validar chamada de senha pelo colaborador
+- **Entrada:** Senha com status AGUARDANDO, guichê opcional
+- **Resultado Esperado:** Status muda para CHAMADA, guichê e colaborador registrados
+
+#### CT08: Confirmar Cliente
+- **Objetivo:** Validar confirmação de presença do cliente
+- **Entrada:** Senha com status CHAMADA
+- **Resultado Esperado:** Status muda para EM_ATENDIMENTO
+
+#### CT09: Cancelar Chamada
+- **Objetivo:** Validar cancelamento quando cliente não comparece
+- **Entrada:** Senha com status CHAMADA
+- **Resultado Esperado:** Status volta para AGUARDANDO, guichê e colaborador limpos
+
+#### CT10: Finalizar Atendimento
+- **Objetivo:** Validar finalização de atendimento
+- **Entrada:** Senha em atendimento, descrição preenchida
+- **Resultado Esperado:** Status FINALIZADA, ativo=false
+
+#### CT11: Transferir Atendimento
+- **Objetivo:** Validar transferência para outro departamento
+- **Entrada:** Senha em atendimento, departamento destino e motivo
+- **Resultado Esperado:** Status TRANSFERIDA
+
+#### CT12: Priorização de Senhas Prioritárias
+- **Objetivo:** Validar ordenação por prioridade
+- **Entrada:** Lista com senhas normais e prioritárias
+- **Resultado Esperado:** Prioritárias aparecem primeiro
+
+#### CT13: Visualizar Senhas em TV Estática
+- **Objetivo:** Validar visualização otimizada para TV
+- **Entrada:** Acesso à tela /senhas
+- **Resultado Esperado:** Senha atual grande e últimas 3 chamadas ao lado
+
+### 13.6 Tecnologias de Teste
+
+| Ferramenta | Versão | Propósito |
+|-----------|--------|-----------|
+| JUnit 5 | 5.x | Framework de testes |
+| Mockito | 4.x | Mocking de dependências |
+| Spring Boot Test | 3.5.7 | Testes de integração |
+
+---
+
+## 14. API REST
 
 ### Exemplos
 
@@ -601,12 +1227,177 @@ Content-Type: application/json
 
 ---
 
+---
+
+## 15. Diagrama de Sequência
+
+### 15.1 Fluxo: Gerar Senha e Atender
+
+```
+Cliente           ViewController       EntityFactory      SecaoRepository    H2ConnectionSingleton
+  │                    │                    │                    │                    │
+  │── POST /criar-secao─▶                    │                    │                    │
+  │                    │                    │                    │                    │
+  │                    │── createSecao() ───▶                    │                    │
+  │                    │                    │                    │                    │
+  │                    │                    │── generateSenha()  │                    │
+  │                    │                    │  (Factory Pattern) │                    │
+  │                    │                    │◀─ "NA001" ─────────│                    │
+  │                    │                    │                    │                    │
+  │                    │◀── Secao ──────────│                    │                    │
+  │                    │  (senha, status)   │                    │                    │
+  │                    │                    │                    │                    │
+  │                    │── save() ──────────────────────────────▶│                    │
+  │                    │                    │                    │                    │
+  │                    │                    │                    │── getConnection() ──▶
+  │                    │                    │                    │                    │
+  │                    │                    │                    │◀─ Connection ───────│
+  │                    │                    │                    │                    │
+  │                    │                    │                    │── INSERT INTO ──────▶
+  │                    │                    │                    │                    │
+  │                    │◀── saved Secao ──────│                    │                    │
+  │                    │                    │                    │                    │
+  │◀── HTTP 200 ───────│                    │                    │                    │
+  │  (senha gerada)    │                    │                    │                    │
+```
+
+### 15.2 Fluxo: Chamar Senha e Atender
+
+```
+Colaborador       ViewController       SecaoRepository    AtendimentoService
+  │                    │                    │                    │
+  │── POST /login ──────▶                    │                    │
+  │                    │                    │                    │
+  │                    │── validate() ──────────────────────────▶│
+  │                    │                    │                    │
+  │◀── redirect ───────│                    │                    │
+  │  /atendimento      │                    │                    │
+  │                    │                    │                    │
+  │── GET /atendimento─▶                    │                    │
+  │                    │                    │                    │
+  │                    │── findByStatus() ───▶                   │
+  │                    │  "AGUARDANDO"      │                    │
+  │                    │                    │                    │
+  │                    │◀── List<Secao> ────│                    │
+  │                    │                    │                    │
+  │◀── render ─────────│                    │                    │
+  │  (lista senhas)    │                    │                    │
+  │                    │                    │                    │
+  │── POST /chamar ────▶                    │                    │
+  │  (idSecao)         │                    │                    │
+  │                    │                    │                    │
+  │                    │── findById() ──────▶                    │
+  │                    │                    │                    │
+  │                    │◀── Secao ──────────│                    │
+  │                    │                    │                    │
+  │                    │── setStatus() ─────▶                    │
+  │                    │  "CHAMADA"         │                    │
+  │                    │                    │                    │
+  │                    │── save() ──────────▶                    │
+  │                    │                    │                    │
+  │◀── redirect ───────│                    │                    │
+  │  /atendimento      │                    │                    │
+```
+
+### 15.3 Fluxo: Finalizar Atendimento
+
+```
+Colaborador       ViewController       SecaoService      AtendimentoService    Repository
+  │                    │                    │                    │                    │
+  │── POST /finalizar ─▶                    │                    │                    │
+  │  (idSecao, desc)   │                    │                    │                    │
+  │                    │                    │                    │                    │
+  │                    │── findById() ──────▶                    │                    │
+  │                    │                    │                    │                    │
+  │                    │◀── Secao ──────────│                    │                    │
+  │                    │                    │                    │                    │
+  │                    │── setStatus() ─────▶                    │                    │
+  │                    │  "FINALIZADA"      │                    │                    │
+  │                    │                    │                    │                    │
+  │                    │── setAtivo(false) ─▶                    │                    │
+  │                    │                    │                    │                    │
+  │                    │── criarAtendimento()─────────────────────▶                    │
+  │                    │                    │                    │                    │
+  │                    │                    │                    │── save() ───────────▶
+  │                    │                    │                    │                    │
+  │                    │── save() ──────────▶                    │                    │
+  │                    │                    │                    │                    │
+  │                    │                    │                    │◀── Atendimento ─────│
+  │                    │◀── updated ────────│                    │                    │
+  │                    │                    │                    │                    │
+  │◀── redirect ───────│                    │                    │                    │
+  │  /atendimento      │                    │                    │                    │
+```
+
+---
+
+## 16. Conclusão
+
+### 15.1 Resumo do Projeto
+
+O **Sistema de Atendimento P4 Fila** é uma aplicação completa e profissional que demonstra:
+
+- ✅ **Padrões de Design:** Singleton e Factory implementados corretamente
+- ✅ **Arquitetura Limpa:** Separação de responsabilidades (Model, Repository, Service, Controller)
+- ✅ **Interface Moderna:** Design profissional com glassmorphism
+- ✅ **Testes Unitários:** Cobertura de componentes principais
+- ✅ **Documentação Completa:** README detalhado com diagramas e casos de uso
+
+### 15.2 Funcionalidades Principais
+
+1. **Gerenciamento de Clientes:** CRUD completo
+2. **Geração de Senhas:** Normal e Prioritária com Factory Pattern
+3. **Sistema de Atendimento:** Fluxo completo (Chamar → Confirmar → Finalizar/Transferir)
+4. **Priorização:** Senhas prioritárias atendidas primeiro
+5. **Transferência:** Encaminhamento entre departamentos
+
+### 15.3 Melhorias Futuras
+
+- [ ] Integração com Spring Security para autenticação robusta
+- [ ] API REST completa com documentação Swagger/OpenAPI
+- [ ] Notificações em tempo real com WebSocket
+- [ ] Dashboard com métricas e estatísticas
+- [ ] Testes de integração end-to-end
+- [ ] Deploy em cloud (AWS, Azure, GCP)
+- [ ] Migração para banco de dados PostgreSQL/MySQL
+
+### 15.4 Contribuições
+
+Este projeto foi desenvolvido como trabalho acadêmico demonstrando:
+- Implementação de padrões de design
+- Modelagem de banco de dados
+- Desenvolvimento full-stack com Spring Boot
+- Testes unitários e casos de teste
+- Documentação técnica completa
+
+---
+
 ## 👨‍💻 Autor
 
-Pedro Henrique - Sistema desenvolvido com Spring Boot, H2 Database e padrões de design Singleton + Factory.
+**Pedro Henrique**
+
+Sistema desenvolvido com Spring Boot 3.5.7, H2 Database e padrões de design Singleton + Factory.
+
+**Tecnologias Utilizadas:**
+- Java 21
+- Spring Boot 3.5.7
+- Spring Data JPA
+- H2 Database
+- Thymeleaf
+- JUnit 5 + Mockito
+- Maven
 
 ---
 
 ## 📄 Licença
 
-Este projeto é um demo educacional desenvolvido para fins de aprendizado.
+Este projeto é um demo educacional desenvolvido para fins de aprendizado e demonstração de conceitos de engenharia de software.
+
+---
+
+## 📚 Referências
+
+- [Spring Boot Documentation](https://spring.io/projects/spring-boot)
+- [Design Patterns: Elements of Reusable Object-Oriented Software](https://en.wikipedia.org/wiki/Design_Patterns)
+- [H2 Database](https://www.h2database.com/)
+- [JUnit 5 User Guide](https://junit.org/junit5/docs/current/user-guide/)

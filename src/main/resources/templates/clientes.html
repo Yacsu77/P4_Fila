@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerenciar Clientes - Sistema de Atendimento</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/clientes.css}">
 </head>
 <body>
     <header>
@@ -19,16 +20,16 @@
     </header>
 
     <div class="container">
-        <!-- Formulário de Cadastro/Edição -->
-        <div class="card">
-            <div class="card-header">
-                <h1 class="card-title" th:text="${cliente?.id != null ? '✏️ Editar Cliente' : '➕ Cadastrar Novo Cliente'}"></h1>
-            </div>
+        <div class="clientes-container">
+            <!-- Formulário de Cadastro/Edição -->
+            <div class="form-section">
+                <div class="card-header">
+                    <h1 class="card-title" th:text="${cliente?.id != null ? '✏️ Editar Cliente' : '➕ Cadastrar Novo Cliente'}"></h1>
+                </div>
 
-            <form th:action="@{/clientes}" method="post">
-                <input type="hidden" th:if="${cliente?.id != null}" name="id" th:value="${cliente.id}">
-                
-                <div class="grid grid-2">
+                <form th:action="@{/clientes}" method="post">
+                    <input type="hidden" th:if="${cliente?.id != null}" name="id" th:value="${cliente.id}">
+                    
                     <div class="form-group">
                         <label for="nome">Nome Completo</label>
                         <input type="text" id="nome" name="nome" th:value="${cliente?.nome}" placeholder="Ex: João Silva" required>
@@ -53,56 +54,55 @@
                         <label for="senha">Senha</label>
                         <input type="password" id="senha" name="senha" placeholder="Digite uma senha" th:required="${cliente?.id == null}">
                     </div>
-                </div>
 
-                <div class="btn-group">
-                    <button type="submit" class="btn btn-primary" th:text="${cliente?.id != null ? 'Atualizar' : 'Cadastrar'}"></button>
-                    <a href="/clientes" class="btn btn-secondary" th:if="${cliente?.id != null}">Cancelar</a>
-                </div>
-            </form>
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary" th:text="${cliente?.id != null ? 'Atualizar' : 'Cadastrar'}"></button>
+                        <a href="/clientes" class="btn btn-secondary" th:if="${cliente?.id != null}">Cancelar</a>
+                    </div>
+                </form>
 
-            <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-            <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
-        </div>
-
-        <!-- Lista de Clientes -->
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">📋 Lista de Clientes</h2>
+                <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+                <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
             </div>
 
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nome</th>
-                            <th>Idade</th>
-                            <th>CPF</th>
-                            <th>E-mail</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="cliente : ${clientes}">
-                            <td th:text="${cliente.id}"></td>
-                            <td th:text="${cliente.nome}"></td>
-                            <td th:text="${cliente.idade}"></td>
-                            <td th:text="${cliente.cpf}"></td>
-                            <td th:text="${cliente.email}"></td>
-                            <td>
-                                <a th:href="@{/clientes/editar/{id}(id=${cliente.id})}" class="btn btn-success" style="padding: 6px 12px; margin-right: 5px;">Editar</a>
-                                <a th:href="@{/clientes/deletar/{id}(id=${cliente.id})}" class="btn btn-danger" style="padding: 6px 12px;" onclick="return confirm('Tem certeza que deseja deletar este cliente?')">Excluir</a>
-                            </td>
-                        </tr>
-                        <tr th:if="${#lists.isEmpty(clientes)}">
-                            <td colspan="6" style="text-align: center; color: var(--text-secondary);">Nenhum cliente cadastrado ainda</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <!-- Lista de Clientes -->
+            <div class="table-section">
+                <div class="card-header">
+                    <h2 class="card-title">📋 Lista de Clientes</h2>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nome</th>
+                                <th>Idade</th>
+                                <th>CPF</th>
+                                <th>E-mail</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="cliente : ${clientes}">
+                                <td th:text="${cliente.id}"></td>
+                                <td th:text="${cliente.nome}"></td>
+                                <td th:text="${cliente.idade}"></td>
+                                <td th:text="${cliente.cpf}"></td>
+                                <td th:text="${cliente.email}"></td>
+                                <td class="actions-cell">
+                                    <a th:href="@{/clientes/editar/{id}(id=${cliente.id})}" class="btn btn-success btn-small">Editar</a>
+                                    <a th:href="@{/clientes/deletar/{id}(id=${cliente.id})}" class="btn btn-danger btn-small" onclick="return confirm('Tem certeza que deseja deletar este cliente?')">Excluir</a>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(clientes)}">
+                                <td colspan="6" style="text-align: center; color: var(--gray-medium); padding: 40px;">Nenhum cliente cadastrado ainda</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 </body>
 </html>
-

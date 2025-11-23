@@ -1,8 +1,10 @@
 package com.example.P4_Fila.config;
 
 import com.example.P4_Fila.factory.EntityFactory;
+import com.example.P4_Fila.model.Cliente;
 import com.example.P4_Fila.model.Colaborador;
 import com.example.P4_Fila.model.Departamento;
+import com.example.P4_Fila.repository.ClienteRepository;
 import com.example.P4_Fila.repository.ColaboradorRepository;
 import com.example.P4_Fila.repository.DepartamentoRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,10 +23,11 @@ public class DataInitializer implements CommandLineRunner {
     private final EntityFactory entityFactory;
     private final DepartamentoRepository departamentoRepository;
     private final ColaboradorRepository colaboradorRepository;
+    private final ClienteRepository clienteRepository;
     
     @Override
     public void run(String... args) throws Exception {
-        log.info("🚀 Iniciando cadastro de colaboradores padrão...");
+        log.info("🚀 Iniciando cadastro de dados padrão...");
         
         // Criar departamento padrão se não existir
         Departamento departamento = departamentoRepository.findAll().stream()
@@ -33,6 +36,22 @@ public class DataInitializer implements CommandLineRunner {
                 departamentoRepository.save(entityFactory.createDepartamento("Atendimento ao Cliente"));
                 return departamentoRepository.findAll().get(0);
             });
+        
+        // Criar Cliente Anônimo se não existir
+        Cliente clienteAnonimo = clienteRepository.findByCpf("00000000000").orElse(null);
+        if (clienteAnonimo == null) {
+            clienteAnonimo = entityFactory.createCliente(
+                "Cliente Anônimo",
+                0,
+                "00000000000",
+                "anonimo@sistema.com",
+                "anonimo123"
+            );
+            clienteAnonimo = clienteRepository.save(clienteAnonimo);
+            log.info("✅ Cliente Anônimo cadastrado - ID: {}", clienteAnonimo.getId());
+        } else {
+            log.info("✅ Cliente Anônimo já existe no banco de dados");
+        }
         
         // Verificar se já existem colaboradores
         if (colaboradorRepository.count() == 0) {

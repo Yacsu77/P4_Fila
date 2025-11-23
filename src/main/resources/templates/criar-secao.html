@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Criar Senha - Sistema de Atendimento</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/criar-secao.css}">
 </head>
 <body>
     <header>
@@ -18,36 +19,57 @@
         </nav>
     </header>
 
-    <div class="container">
-        <div class="card">
+    <div class="container criar-secao-container">
+        <div class="form-section">
             <div class="card-header">
                 <h1 class="card-title">Gerar Senha de Atendimento</h1>
             </div>
 
-            <form th:action="@{/criar-secao}" method="post">
-                <div class="grid grid-2">
-                    <div class="form-group">
-                        <label for="idCliente">Selecione o Cliente</label>
-                        <select id="idCliente" th:name="idCliente" required>
-                            <option value="">-- Selecione um cliente --</option>
-                            <option th:each="cliente : ${clientes}" th:value="${cliente.id}" th:text="${cliente.nome + ' (' + cliente.cpf + ')'}"></option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="tipoSecao">Tipo de Atendimento</label>
-                        <select id="tipoSecao" th:name="tipoSecao" required>
-                            <option value="">-- Selecione o tipo --</option>
-                            <option value="NORMAL">Normal</option>
-                            <option value="PRIORITARIA">Prioritária</option>
-                        </select>
+            <form th:action="@{/criar-secao}" method="post" id="formCriarSecao">
+                <div class="form-group">
+                    <label>Modo de Atendimento</label>
+                    <div class="modo-atendimento">
+                        <label class="modo-option" for="modoCliente">
+                            <input type="radio" id="modoCliente" name="modoAtendimento" value="cliente" checked onchange="toggleModo()">
+                            <span>Cliente Cadastrado</span>
+                        </label>
+                        <label class="modo-option anonimo" for="modoAnonimo">
+                            <input type="radio" id="modoAnonimo" name="modoAtendimento" value="anonimo" onchange="toggleModo()">
+                            <span>🚨 Cliente Anônimo (Rápido)</span>
+                        </label>
                     </div>
                 </div>
 
-                <div class="alert alert-info" style="margin-top: 20px;">
-                    <strong>ℹ️ Informação:</strong> A senha será gerada automaticamente pelo sistema.<br>
-                    <strong>Normal:</strong> Prefixo NA### (ex: NA001, NA002)<br>
-                    <strong>Prioritária:</strong> Prefixo PX### (ex: PX001, PX002)
+                <div class="form-group" id="selectClienteGroup">
+                    <label for="idCliente">Selecione o Cliente</label>
+                    <select id="idCliente" name="idCliente">
+                        <option value="">-- Selecione um cliente --</option>
+                        <option th:each="cliente : ${clientes}" th:value="${cliente.id}" th:text="${cliente.nome + ' (' + cliente.cpf + ')'}"></option>
+                    </select>
+                </div>
+
+                <input type="hidden" id="clienteAnonimoInput" name="clienteAnonimo" value="">
+
+                <div class="form-group" id="selectTipoGroup">
+                    <label for="tipoSecao">Tipo de Atendimento</label>
+                    <select id="tipoSecao" name="tipoSecao">
+                        <option value="">-- Selecione o tipo --</option>
+                        <option value="NORMAL">Normal</option>
+                        <option value="PRIORITARIA">Prioritária</option>
+                    </select>
+                </div>
+
+                <div id="anonimoInfo" class="anonimo-alert" style="display: none;">
+                    <strong>🚨 Cliente Anônimo:</strong> A senha será gerada automaticamente como <strong>PRIORITÁRIA</strong> para atendimento rápido. Não é necessário cadastrar cliente previamente.
+                </div>
+
+                <div class="info-box" id="infoBox">
+                    <strong>ℹ️ Informação:</strong>
+                    <ul>
+                        <li>A senha será gerada automaticamente pelo sistema.</li>
+                        <li><strong>Normal:</strong> Prefixo NA### (ex: NA001, NA002)</li>
+                        <li><strong>Prioritária:</strong> Prefixo PX### (ex: PX001, PX002)</li>
+                    </ul>
                 </div>
 
                 <div class="btn-group">
@@ -56,14 +78,16 @@
                 </div>
             </form>
 
-            <div th:if="${senhaGerada}" class="senha-display" style="margin-top: 30px;">
-                <div style="font-size: 1.5rem; margin-bottom: 10px;">✅ Senha Gerada com Sucesso!</div>
-                <div class="senha-codigo" th:text="${senhaGerada}"></div>
-                <div class="senha-info">
-                    Tipo: <span th:text="${tipoSecao}"></span>
-                </div>
-                <div style="margin-top: 20px;">
-                    <a href="/criar-secao" class="btn" style="background: white; color: #667eea;">Gerar Outra Senha</a>
+            <div th:if="${senhaGerada}" class="senha-display-container">
+                <div class="senha-display">
+                    <div class="label">✅ Senha Gerada com Sucesso!</div>
+                    <div class="senha-codigo" th:text="${senhaGerada}">NA001</div>
+                    <div class="senha-info">
+                        Tipo: <span th:text="${tipoSecao}">NORMAL</span>
+                    </div>
+                    <div style="margin-top: 30px;">
+                        <a href="/criar-secao" class="btn" style="background: white; color: #000000; padding: 12px 24px;">Gerar Outra Senha</a>
+                    </div>
                 </div>
             </div>
 
@@ -72,7 +96,35 @@
     </div>
 
     <script>
-        // Redirecionar para /senhas após 5 segundos se a senha foi gerada
+        function toggleModo() {
+            const modoAtendimento = document.querySelector('input[name="modoAtendimento"]:checked').value;
+            const selectClienteGroup = document.getElementById('selectClienteGroup');
+            const selectTipoGroup = document.getElementById('selectTipoGroup');
+            const anonimoInfo = document.getElementById('anonimoInfo');
+            const clienteAnonimoInput = document.getElementById('clienteAnonimoInput');
+            const idClienteSelect = document.getElementById('idCliente');
+            const tipoSecaoSelect = document.getElementById('tipoSecao');
+            const infoBox = document.getElementById('infoBox');
+            
+            if (modoAtendimento === 'anonimo') {
+                // Modo anônimo - ocultar seleção de cliente e tipo
+                selectClienteGroup.style.display = 'none';
+                selectTipoGroup.style.display = 'none';
+                anonimoInfo.style.display = 'block';
+                clienteAnonimoInput.value = 'anonimo';
+                idClienteSelect.required = false;
+                tipoSecaoSelect.required = false;
+            } else {
+                // Modo cliente cadastrado - mostrar seleção
+                selectClienteGroup.style.display = 'block';
+                selectTipoGroup.style.display = 'block';
+                anonimoInfo.style.display = 'none';
+                clienteAnonimoInput.value = '';
+                idClienteSelect.required = true;
+                tipoSecaoSelect.required = true;
+            }
+        }
+        
         if (document.querySelector('.senha-display')) {
             setTimeout(function() {
                 if (confirm('Deseja visualizar todas as senhas?')) {
@@ -83,4 +135,3 @@
     </script>
 </body>
 </html>
-

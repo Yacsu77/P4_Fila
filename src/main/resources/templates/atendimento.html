@@ -5,13 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="refresh" content="15">
     <title>Atendimento - Colaborador</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/atendimento.css}">
 </head>
 <body>
     <header>
         <nav>
             <div class="logo">👨‍💼 Painel de Atendimento</div>
             <div class="nav-links">
+                <span class="colaborador-info-discreta" th:if="${colaboradorLogado != null}">
+                    <span th:text="${colaboradorLogado.nome}">João Silva</span>
+                </span>
                 <a href="/login">Trocar Usuário</a>
                 <a href="/senhas">Ver Senhas</a>
             </div>
@@ -23,139 +27,140 @@
             <strong>🔄 Atualização Automática:</strong> Esta página é atualizada automaticamente a cada 15 segundos.
         </div>
 
-        <!-- Informações do Colaborador -->
-        <div class="card">
-            <div class="card-header">
-                <h1 class="card-title">🔐 Usuário Logado</h1>
-            </div>
-            <div style="padding: 20px;">
-                <p><strong>Colaborador:</strong> <span th:text="${colaboradorLogado?.nome}"></span></p>
-                <p><strong>CPF:</strong> <span th:text="${colaboradorLogado?.cpf}"></span></p>
-                <p><strong>Departamento ID:</strong> <span th:text="${colaboradorLogado?.departamentoId}"></span></p>
-            </div>
+        <!-- Estado: Nenhum atendimento -->
+        <div th:unless="${temAtendimentos}" class="empty-state-full">
+            <div class="icon-large">💼</div>
+            <h2>Nenhum atendimento disponível</h2>
+            <p>Não há senhas aguardando atendimento no momento.</p>
         </div>
 
-        <!-- FASE 1: Senha em Atendimento (se houver) -->
-        <div th:if="${senhaEmAtendimento}" class="card" style="border: 3px solid var(--success-color);">
-            <div class="card-header">
-                <h2 class="card-title">👨‍💼 Atendimento em Andamento</h2>
-                <span class="badge badge-success" style="font-size: 1rem;">EM ATENDIMENTO</span>
-            </div>
+        <!-- Estado: Tem atendimentos disponíveis -->
+        <div th:if="${temAtendimentos}" class="atendimento-main">
             
-            <div class="senha-display">
-                <div class="senha-codigo" th:text="${senhaEmAtendimento.senha}"></div>
-                <div class="senha-info">
-                    Tipo: <span th:text="${senhaEmAtendimento.tipoSecao}"></span>
+            <!-- FASE 1: Senha em Atendimento (EM_ATENDIMENTO) - Prioridade Máxima -->
+            <div th:if="${senhaEmAtendimento != null}" class="atendimento-em-andamento">
+                <div class="card-header">
+                    <h2 class="card-title">👨‍💼 Atendimento em Andamento</h2>
+                    <span class="badge-status em-atendimento">EM ATENDIMENTO</span>
+                </div>
+                
+                <div class="senha-display-large">
+                    <div class="senha-codigo-large" th:text="${senhaEmAtendimento.senha}">NA001</div>
+                    <div class="senha-info-large">
+                        <div class="info-row">
+                            <span class="label">Tipo:</span>
+                            <span class="badge-tipo" 
+                                  th:classappend="${senhaEmAtendimento.tipoSecao == 'PRIORITARIA'} ? prioritaria : normal"
+                                  th:text="${senhaEmAtendimento.tipoSecao}">NORMAL</span>
+                        </div>
+                        <div class="info-row" th:if="${senhaEmAtendimento.guicheChamada != null}">
+                            <span class="label">Chamada em:</span>
+                            <span th:text="${senhaEmAtendimento.guicheChamada}">Guichê 1</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="acoes-atendimento">
+                    <!-- Finalizar Atendimento -->
+                    <form th:action="@{/atendimento/finalizar}" method="post" class="acao-form">
+                        <input type="hidden" th:name="idSecao" th:value="${senhaEmAtendimento.id}">
+                        <div class="form-group">
+                            <label for="descricao">Descrição do Atendimento</label>
+                            <textarea id="descricao" name="descricao" placeholder="Descreva o atendimento realizado..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success btn-large">✅ Finalizar Atendimento</button>
+                    </form>
+
+                    <!-- Transferir Atendimento -->
+                    <form th:action="@{/atendimento/transferir}" method="post" class="acao-form">
+                        <input type="hidden" th:name="idSecao" th:value="${senhaEmAtendimento.id}">
+                        <div class="form-group">
+                            <label for="departamentoDestinoId">Transferir para Departamento ID</label>
+                            <input type="number" id="departamentoDestinoId" name="departamentoDestinoId" placeholder="Ex: 2" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="descricao_transf">Motivo da Transferência</label>
+                            <textarea id="descricao_transf" name="descricao" placeholder="Por que está transferindo?" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-danger btn-large">🔄 Transferir Atendimento</button>
+                    </form>
                 </div>
             </div>
 
-            <div class="grid grid-2" style="margin-top: 20px;">
-                <!-- Finalizar Atendimento -->
-                <form th:action="@{/atendimento/finalizar}" method="post">
-                    <input type="hidden" th:name="idSecao" th:value="${senhaEmAtendimento.id}">
-                    <div class="form-group">
-                        <label for="descricao">Descrição do Atendimento</label>
-                        <textarea id="descricao" name="descricao" placeholder="Descreva o atendimento realizado..." required></textarea>
+            <!-- FASE 2: Senha Chamada (CHAMADA) - Aguardando Confirmação -->
+            <div th:if="${senhaEmAtendimento == null && senhaChamada != null}" class="senha-chamada-aguardando">
+                <div class="card-header">
+                    <h2 class="card-title">📢 Senha Chamada - Aguardando Confirmação</h2>
+                    <span class="badge-status chamada">CHAMADA</span>
+                </div>
+                
+                <div class="senha-display-large">
+                    <div class="senha-codigo-large" th:text="${senhaChamada.senha}">NA001</div>
+                    <div class="senha-info-large">
+                        <div class="info-row">
+                            <span class="label">Tipo:</span>
+                            <span class="badge-tipo" 
+                                  th:classappend="${senhaChamada.tipoSecao == 'PRIORITARIA'} ? prioritaria : normal"
+                                  th:text="${senhaChamada.tipoSecao}">NORMAL</span>
+                        </div>
+                        <div class="info-row" th:if="${senhaChamada.guicheChamada != null}">
+                            <span class="label">Chamada em:</span>
+                            <span th:text="${senhaChamada.guicheChamada}">Guichê 1</span>
+                        </div>
                     </div>
-                    <button type="submit" class="btn btn-success" style="width: 100%;">✅ Finalizar Atendimento</button>
-                </form>
+                </div>
 
-                <!-- Transferir Atendimento -->
-                <form th:action="@{/atendimento/transferir}" method="post">
-                    <input type="hidden" th:name="idSecao" th:value="${senhaEmAtendimento.id}">
-                    <div class="form-group">
-                        <label for="departamentoDestinoId">Transferir para Departamento ID</label>
-                        <input type="number" id="departamentoDestinoId" name="departamentoDestinoId" placeholder="Ex: 2" required>
+                <div class="confirmacao-acoes">
+                    <div class="alerta-confirmacao">
+                        <strong>⚠️ Aguardando confirmação:</strong> O paciente apareceu no guichê?
                     </div>
-                    <div class="form-group">
-                        <label for="descricao_transf">Motivo da Transferência</label>
-                        <textarea id="descricao_transf" name="descricao" placeholder="Por que está transferindo?" required></textarea>
+                    <div class="btn-group-confirmacao">
+                        <form th:action="@{/atendimento/iniciar}" method="post" style="flex: 1;">
+                            <input type="hidden" th:name="idSecao" th:value="${senhaChamada.id}">
+                            <button type="submit" class="btn btn-success btn-large">✅ Sim, Cliente Presente - Iniciar Atendimento</button>
+                        </form>
+                        <form th:action="@{/atendimento/cancelar-chamada}" method="post" style="flex: 1;">
+                            <input type="hidden" th:name="idSecao" th:value="${senhaChamada.id}">
+                            <button type="submit" class="btn btn-secondary btn-large">❌ Cliente Não Compareceu - Cancelar Chamada</button>
+                        </form>
                     </div>
-                    <button type="submit" class="btn" style="width: 100%; background: var(--warning-color); color: white;">🔄 Transferir Atendimento</button>
-                </form>
-            </div>
-        </div>
-
-        <!-- FASE 2: Lista de Senhas Aguardando -->
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">📋 Senhas Aguardando Atendimento</h2>
-                <span class="badge badge-info" th:text="${#lists.size(senhasAguardando) + ' em espera'}"></span>
+                </div>
             </div>
 
-            <div th:if="${#lists.isEmpty(senhasAguardando)}" class="alert alert-info">
-                <strong>ℹ️ Nenhuma senha aguardando no momento.</strong>
-            </div>
+            <!-- FASE 3: Senhas Aguardando (AGUARDANDO) - Para Chamar -->
+            <div th:if="${senhaEmAtendimento == null && senhaChamada == null && !#lists.isEmpty(senhasAguardando)}" class="senhas-aguardando-section">
+                <div class="section-header">
+                    <h2 class="section-title">📋 Senhas Aguardando Atendimento</h2>
+                    <span class="badge-count" th:text="${#lists.size(senhasAguardando)}">0</span>
+                </div>
 
-            <div th:if="${!#lists.isEmpty(senhasAguardando)}" class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Senha</th>
-                            <th>Tipo</th>
-                            <th>Status</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="senha : ${senhasAguardando}">
-                            <td><span class="senha-codigo" style="font-size: 1.5rem; letter-spacing: 5px;" th:text="${senha.senha}"></span></td>
-                            <td>
-                                <span class="badge" th:classappend="${senha.tipoSecao == 'PRIORITARIA'} ? badge-danger : badge-info" 
-                                      th:text="${senha.tipoSecao}"></span>
-                            </td>
-                            <td>
-                                <span class="badge badge-warning" th:text="${senha.status}"></span>
-                            </td>
-                            <td>
-                                <div style="display: flex; gap: 5px;">
-                                    <form th:action="@{/atendimento/chamar}" method="post" style="display: inline;">
-                                        <input type="hidden" th:name="idSecao" th:value="${senha.id}">
-                                        <button type="submit" class="btn" style="background: var(--primary-color); color: white; padding: 6px 12px;">📢 Chamar</button>
-                                    </form>
-                                    <form th:action="@{/atendimento/iniciar}" method="post" style="display: inline;">
-                                        <input type="hidden" th:name="idSecao" th:value="${senha.id}">
-                                        <button type="submit" class="btn btn-success" style="padding: 6px 12px;">✅ Confirmar Cliente</button>
-                                    </form>
+                <div class="senhas-grid">
+                    <div class="senha-item-card" th:each="senha : ${senhasAguardando}">
+                        <div class="senha-header-card">
+                            <div class="senha-numero" th:text="${senha.senha}">NA001</div>
+                            <span class="senha-tipo-badge" 
+                                  th:classappend="${senha.tipoSecao == 'PRIORITARIA'} ? prioritaria : normal"
+                                  th:text="${senha.tipoSecao}">NORMAL</span>
+                        </div>
+                        <div class="senha-info-card">
+                            <div class="info-line">
+                                <span class="info-label">Status:</span>
+                                <span class="status-badge" th:text="${senha.status}">AGUARDANDO</span>
+                            </div>
+                        </div>
+                        <div class="senha-actions-card">
+                            <form th:action="@{/atendimento/chamar}" method="post">
+                                <input type="hidden" th:name="idSecao" th:value="${senha.id}">
+                                <div class="form-group-inline">
+                                    <input type="text" name="guiche" placeholder="Guichê (opcional)" class="input-guiche">
                                 </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Histórico de Atendimentos -->
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">📊 Meus Atendimentos Recentes</h2>
-            </div>
-
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Senha</th>
-                            <th>Descrição</th>
-                            <th>Data/Hora</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="atendimento : ${meusAtendimentos}">
-                            <td th:text="${atendimento.id}"></td>
-                            <td th:text="${atendimento.idSecao}"></td>
-                            <td th:text="${atendimento.descricaoAtendimento}"></td>
-                            <td>-</td>
-                        </tr>
-                        <tr th:if="${#lists.isEmpty(meusAtendimentos)}">
-                            <td colspan="4" style="text-align: center; color: var(--text-secondary);">Nenhum atendimento realizado ainda</td>
-                        </tr>
-                    </tbody>
-                </table>
+                                <button type="submit" class="btn btn-primary btn-full">📢 Chamar para a Sala</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </body>
 </html>
-

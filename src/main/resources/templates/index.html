@@ -3,78 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Atendimento - P4 Fila</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <title>Sistema P4 Fila - Gestão de Filas de Atendimento</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/index.css}">
 </head>
 <body>
-    <header>
-        <nav>
-            <div class="logo">🎯 Sistema P4 Fila</div>
-            <div class="nav-links">
-                <a href="/">Início</a>
-                <a href="/clientes">Clientes</a>
-                <a href="/criar-secao">Criar Senha</a>
-                <a href="/senhas">Visualizar Senhas</a>
-                <a href="/login">Login Colaborador</a>
+    <header class="header-presentation">
+        <nav class="nav-presentation">
+            <div class="logo-presentation">🎯 P4 Fila</div>
+            
+            <!-- Menu Dropdown -->
+            <div class="menu-container">
+                <button class="menu-toggle" onclick="toggleMenu()">
+                    <span>☰ Menu</span>
+                </button>
+                <div class="dropdown-menu" id="dropdownMenu">
+                    <div class="menu-item has-submenu">
+                        <a href="#" onclick="toggleSubmenu(event)">🎫 Senhas</a>
+                        <ul class="submenu">
+                            <li><a href="/criar-secao">➜ Gerar Senha</a></li>
+                            <li><a href="/senhas">➜ Visualizar Senhas</a></li>
+                        </ul>
+                    </div>
+                    <div class="menu-item">
+                        <a href="/login">👨‍💼 Login Colaborador</a>
+                    </div>
+                </div>
             </div>
         </nav>
     </header>
 
-    <div class="container">
-        <div class="card">
-            <div class="card-header">
-                <h1 class="card-title">Bem-vindo ao Sistema de Atendimento</h1>
-            </div>
-            
-            <p style="font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 30px;">
-                Gerencie filas de atendimento, clientes e colaboradores de forma eficiente.
-            </p>
-
-            <div class="grid grid-2">
-                <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                    <h2 style="margin-bottom: 15px;">👤 Clientes</h2>
-                    <p style="margin-bottom: 20px;">Cadastre, altere e exclua clientes do sistema</p>
-                    <a href="/clientes" class="btn" style="background: white; color: #667eea;">Gerenciar Clientes</a>
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="container">
+            <h2 class="section-title">Funcionalidades</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎫</div>
+                    <h3 class="feature-title">Geração de Senhas</h3>
+                    <p class="feature-description">Gere senhas normais ou prioritárias para atendimento rápido e organizado</p>
                 </div>
-
-                <div class="card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
-                    <h2 style="margin-bottom: 15px;">🎫 Criar Senha</h2>
-                    <p style="margin-bottom: 20px;">Gere senhas de atendimento (Normal ou Prioritária)</p>
-                    <a href="/criar-secao" class="btn" style="background: white; color: #f5576c;">Criar Senha</a>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📋</div>
+                    <h3 class="feature-title">Visualização em Tempo Real</h3>
+                    <p class="feature-description">Acompanhe todas as senhas e chamadas em tempo real em uma tela dedicada</p>
                 </div>
-
-                <div class="card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
-                    <h2 style="margin-bottom: 15px;">📋 Visualizar Senhas</h2>
-                    <p style="margin-bottom: 20px;">Acompanhe todas as senhas em tempo real</p>
-                    <a href="/senhas" class="btn" style="background: white; color: #00f2fe;">Ver Senhas</a>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">👨‍💼</div>
+                    <h3 class="feature-title">Painel do Colaborador</h3>
+                    <p class="feature-description">Gerencie atendimentos, chame senhas e finalize serviços de forma intuitiva</p>
                 </div>
-
-                <div class="card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white;">
-                    <h2 style="margin-bottom: 15px;">👨‍💼 Login Colaborador</h2>
-                    <p style="margin-bottom: 20px;">Acesse para iniciar atendimentos</p>
-                    <a href="/login" class="btn" style="background: white; color: #fee140;">Fazer Login</a>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">👤</div>
+                    <h3 class="feature-title">Gestão de Clientes</h3>
+                    <p class="feature-description">Cadastre, edite e gerencie clientes do sistema de forma simples</p>
                 </div>
-            </div>
-        </div>
-
-        <div class="card">
-            <h2 style="margin-bottom: 20px;">📊 Estatísticas Rápidas</h2>
-            <div class="grid grid-3">
-                <div style="text-align: center; padding: 20px; background: #f9fafb; border-radius: 8px;">
-                    <div style="font-size: 2.5rem; font-weight: bold; color: var(--primary-color);" th:text="${totalClientes}">0</div>
-                    <div style="color: var(--text-secondary);">Clientes Cadastrados</div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🚨</div>
+                    <h3 class="feature-title">Atendimento Prioritário</h3>
+                    <p class="feature-description">Sistema permite atendimento rápido para clientes anônimos</p>
                 </div>
-                <div style="text-align: center; padding: 20px; background: #f9fafb; border-radius: 8px;">
-                    <div style="font-size: 2.5rem; font-weight: bold; color: var(--success-color);" th:text="${senhasAtivas}">0</div>
-                    <div style="color: var(--text-secondary);">Senhas Ativas</div>
-                </div>
-                <div style="text-align: center; padding: 20px; background: #f9fafb; border-radius: 8px;">
-                    <div style="font-size: 2.5rem; font-weight: bold; color: var(--warning-color);" th:text="${senhasEspera}">0</div>
-                    <div style="color: var(--text-secondary);">Em Espera</div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3 class="feature-title">Transferência de Atendimento</h3>
+                    <p class="feature-description">Transfira atendimentos entre departamentos quando necessário</p>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number" th:text="${totalClientes != null ? totalClientes : '0'}">0</div>
+                    <div class="stat-label">Clientes Cadastrados</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" th:text="${senhasAtivas != null ? senhasAtivas : '0'}">0</div>
+                    <div class="stat-label">Senhas Ativas</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" th:text="${senhasEspera != null ? senhasEspera : '0'}">0</div>
+                    <div class="stat-label">Em Espera</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer-presentation">
+        <div class="container">
+            <p>&copy; 2025 Sistema P4 Fila - Gestão de Filas de Atendimento</p>
+        </div>
+    </footer>
+
+    <script>
+        function toggleMenu() {
+            const menu = document.getElementById('dropdownMenu');
+            menu.classList.toggle('show');
+        }
+
+        function toggleSubmenu(event) {
+            event.preventDefault();
+            const submenu = event.target.nextElementSibling;
+            if (submenu) {
+                submenu.classList.toggle('show');
+            }
+        }
+
+        // Fechar menu ao clicar fora
+        window.onclick = function(event) {
+            const menu = document.getElementById('dropdownMenu');
+            if (!event.target.matches('.menu-toggle') && !event.target.closest('.menu-container')) {
+                if (menu.classList.contains('show')) {
+                    menu.classList.remove('show');
+                }
+            }
+        }
+    </script>
 </body>
 </html>
-

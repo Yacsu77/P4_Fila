@@ -33,6 +33,12 @@ public class Secao {
     @Column(name = "status")
     private String status; // "AGUARDANDO", "CHAMADA", "EM_ATENDIMENTO", "FINALIZADA", "TRANSFERIDA"
     
+    @Column(name = "guiche_chamada")
+    private String guicheChamada; // Nome ou identificador do guichê que chamou
+    
+    @Column(name = "colaborador_chamada")
+    private String colaboradorChamada; // Nome do colaborador que chamou
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_cliente", insertable = false, updatable = false)
     private Cliente cliente;

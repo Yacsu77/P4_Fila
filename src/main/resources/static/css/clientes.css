@@ -1,0 +1,84 @@
+/* ===== Estilos Específicos - Gerenciar Clientes ===== */
+
+.clientes-container {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 30px;
+}
+
+@media (max-width: 1024px) {
+    .clientes-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+.form-section {
+    background: var(--primary-white);
+    border-radius: 12px;
+    padding: 35px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-light);
+}
+
+.table-section {
+    background: var(--primary-white);
+    border-radius: 12px;
+    padding: 35px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-light);
+}
+
+.table-container {
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid var(--gray-light);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--primary-white);
+}
+
+thead {
+    background: var(--primary-black);
+    color: var(--primary-white);
+}
+
+th {
+    padding: 14px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+td {
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--gray-ultralight);
+}
+
+tbody tr {
+    transition: background 0.2s ease;
+}
+
+tbody tr:hover {
+    background: var(--gray-ultralight);
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.actions-cell {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-small {
+    padding: 6px 14px;
+    font-size: 0.75rem;
+}
+

@@ -1,0 +1,131 @@
+/* ===== Estilos Específicos - Criar Senha ===== */
+
+.criar-secao-container {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.form-section {
+    background: var(--primary-white);
+    border-radius: 12px;
+    padding: 40px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-light);
+}
+
+.senha-display-container {
+    margin-top: 40px;
+}
+
+.senha-display {
+    text-align: center;
+    padding: 60px 40px;
+    background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+    border-radius: 16px;
+    color: white;
+    box-shadow: var(--shadow-lg);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.senha-display .label {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+}
+
+.senha-codigo {
+    font-size: 6rem;
+    font-weight: 300;
+    letter-spacing: 25px;
+    margin: 30px 0;
+    text-shadow: 0 4px 20px rgba(255, 255, 255, 0.3);
+    font-family: 'Courier New', monospace;
+}
+
+.senha-info {
+    font-size: 1.2rem;
+    opacity: 0.85;
+    margin-top: 20px;
+}
+
+.info-box {
+    background: rgba(0, 0, 0, 0.05);
+    border-left: 4px solid var(--primary-black);
+    padding: 20px;
+    border-radius: 8px;
+    margin: 25px 0;
+}
+
+.modo-atendimento {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.modo-option {
+    flex: 1;
+    padding: 20px;
+    border: 2px solid var(--gray-light);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--primary-white);
+}
+
+.modo-option:hover {
+    border-color: var(--primary-black);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.modo-option input[type="radio"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.modo-option.anonimo {
+    background: rgba(255, 0, 0, 0.05);
+    border-color: rgba(255, 0, 0, 0.3);
+}
+
+.modo-option.anonimo:hover {
+    border-color: #ff0000;
+    background: rgba(255, 0, 0, 0.1);
+}
+
+.modo-option input[type="radio"]:checked ~ span {
+    font-weight: 600;
+}
+
+.anonimo-alert {
+    padding: 15px;
+    background: rgba(255, 0, 0, 0.05);
+    border-left: 4px solid #ff0000;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.anonimo-alert strong {
+    color: #ff0000;
+}
+
+.info-box strong {
+    color: var(--primary-black);
+}
+
+.info-box ul {
+    margin-top: 10px;
+    margin-left: 20px;
+}
+
+.info-box li {
+    margin: 5px 0;
+    color: var(--gray-dark);
+}
+
